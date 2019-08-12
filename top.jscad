@@ -4,91 +4,114 @@ const spacing = 3.0;
 const thickness = 5.0;
 const latch = cube({ size: [switchMaxWidth, 4.9, -0.7], center: [1, 1, 0] });
 const center = [1, 1, 0];
-const stopper = cube({
-  size: [3, 2.9, 3],
+const boxSize = switchMinWidth + spacing * 2;
+const cableHolder = cylinder({
+  r: 1,
+  h: boxSize * 4,
   center
-});
-const cableGuide = difference(
+})
+  .rotateX(90)
+  .translate([0, boxSize / 2 + 30, 1.5]);
+
+const range = to => [...Array(to).keys()];
+const controllerHolder = difference(
   cube({
-    size: [switchMinWidth, 4, 2.9],
-    center
-  }),
-  cylinder({
-    r: 3,
-    h: 10,
-    center
-  })
-);
-const contactSeparator = difference(
-  cylinder({
-    r: 4,
-    h: 2.8,
-    center
-  }),
-  cylinder({
-    r: 3,
-    h: 2.8,
-    center
-  }),
-  cube({
-    size: [8, 4, 2.8],
-    center
-  }).translate([0, -2, 0])
-);
-const main = () =>
+    size: [22, 2 * boxSize, thickness],
+    center,
+    radius: [1, 1, 0.3]
+  }).translate([0, 2.9, 0]),
   union(
-    // stopper.translate([(switchMinWidth - 3) / 2, (switchMinWidth - 3) / 2, 0]),
-    // stopper.translate([(switchMinWidth - 3) / -2, (switchMinWidth - 3) / 2, 0]),
-    // cableGuide.translate([0, (switchMinWidth - 4) / -2, 0]),
-    contactSeparator.translate([0, -switchMinWidth / 2, 0]),
-    difference(
-      union(
-        cube({
-          size: [
-            switchMinWidth + spacing * 2,
-            switchMinWidth + spacing * 2,
-            thickness
-          ],
-          center
-        }),
-        cube({
-          size: [
-            switchMinWidth + spacing * 2,
-            switchMinWidth + spacing * 2,
-            thickness / 2
-          ],
-          center
-        })
-      ),
+    cube({
+      size: [18.4, 33.4, 1.8],
+      center,
+      radius: 0.3
+    }).translate([0, 2.7, 3]),
+    cube({
+      size: [18.1, 34, 1.6],
+      center,
+      radius: 0.3
+    }).translate([0, 3.8, 4.5]),
+    cube({
+      size: [7, 30.5, 3],
+      center
+    }).translate([5.5, 1.75, 0]),
+    cube({
+      size: [7, 30.5, 3],
+      center
+    }).translate([-5.5, 1.75, 0])
+  ).translate([0, 2.8, 0]),
+  cableHolder.rotateZ(90).translate([35, 7, 0]),
+  cableHolder.rotateZ(90).translate([35, 9.9, 0]),
+  cableHolder.rotateZ(90).translate([35, 12.9, 0]),
+  cableHolder.rotateZ(90).translate([35, 15.9, 0]),
+  cableHolder.rotateZ(90).translate([35, 18.8, 0]),
+  cableHolder.rotateZ(90).translate([35, -1.1, 0]),
+  cableHolder.rotateZ(90).translate([35, -4, 0]),
+  cableHolder.rotateZ(90).translate([35, -7, 0]),
+  cableHolder.rotateZ(90).translate([31, -10, 0])
+);
+
+const switchHolder = union(
+  difference(
+    union(
       cube({
-        size: [switchMinWidth, switchMinWidth, thickness],
-        center
+        size: [boxSize, boxSize, thickness],
+        center,
+        radius: [1, 1, 0.3]
       }),
       cube({
-        size: [6, 4, 4.8],
+        size: [boxSize, boxSize, thickness / 2],
         center,
-        radius: 2
-      }).translate([0, -switchMinWidth / 2, -2]),
+        radius: [1, 1, 0.3]
+      })
+    ),
+    cube({
+      size: [switchMinWidth, switchMinWidth, thickness],
+      center
+    }),
+    cableHolder,
+    cableHolder.translate([3, 0, 0]),
+    cableHolder.translate([5.9, 0, 0]),
+    cableHolder.translate([-3, 0, 0]),
+    cableHolder.translate([-5.9, 0, 0]),
+    cableHolder.rotateZ(90),
+    cableHolder.rotateZ(90).translate([0, 3, 0]),
+    cableHolder.rotateZ(90).translate([0, 5.9, 0]),
+    cableHolder.rotateZ(90).translate([0, -3, 0]),
+    cableHolder.rotateZ(90).translate([0, -5.9, 0]),
+    latch.translate([0, switchMinWidth / 2 - 3.4, thickness - 1.2]),
+    latch.translate([0, -(switchMinWidth / 2) + 3.4, thickness - 1.2])
+  )
+);
+
+const main = () =>
+  union(
+    ...range(6).map(index =>
+      switchHolder.translate([(index % 3) * boxSize, (index >= 3) * boxSize, 0])
+    ),
+    controllerHolder.translate([-boxSize / 2 - 11, 7, 0]),
+    difference(
       cube({
-        size: [9, 0.6, 1.5],
-        center,
-        radius: 0.3
-      }).translate([-5, -switchMinWidth / 2 - 1.5, -0.1]),
+        radius: [1, 1, 0.3],
+        size: [3 * boxSize, 2 * boxSize, thickness]
+      }),
+      union(
+        ...range(6).map(index =>
+          cube({
+            center,
+            size: [switchMinWidth, switchMinWidth, thickness]
+          }).translate([
+            (index % 3) * boxSize + boxSize / 2,
+            (index >= 3) * boxSize + boxSize / 2,
+            0
+          ])
+        )
+      ),
       cube({
-        size: [5, 2, 3],
-        center,
-        radius: 1
-      }).translate([-5.0, -switchMinWidth / 2 - 1.5, -1]),
+        size: [3 * boxSize - spacing + 1, 2 * boxSize - 2 * spacing, 1]
+      }).translate([0, spacing, 3]),
       cube({
-        size: [1.7, 100, 3],
-        center,
-        radius: 1.7 / 2
-      }).translate([
-        -switchMinWidth / 2 - 1.5,
-        -switchMinWidth / 2 - 1.5,
-        -0.6
-      ]),
-      latch.translate([0, switchMinWidth / 2 - 3.4, thickness - 1.2]),
-      latch.translate([0, -(switchMinWidth / 2) + 3.4, thickness - 1.2])
-    )
+        size: [3 * boxSize - spacing, 2 * boxSize - 2 * spacing, 2]
+      }).translate([0, spacing, 0.5])
+    ).translate([-boxSize / 2, -boxSize / 2, 0])
   );
