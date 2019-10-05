@@ -21,9 +21,9 @@
    (cube switch-min-width switch-min-width thickness)
    (hull
     (->> (cube switch-min-width switch-min-width 2.5)
-         (translate [0, 0, -1]))
+         (translate [0 0 -1]))
     (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) 3.5)
-         (translate [0, 0, -3])))
+         (translate [0 0 -3])))
    (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
 
    (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
@@ -59,7 +59,7 @@
 (def connector-end
   (scale [1 1 1.2] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 5] (sphere 1)))))
 
-(def horizontal-matches [[5, 19], [6, 18], [7, 17], [8, 16], [9, 15]])
+(def horizontal-matches [[5 19] [6 18] [7 17] [8 16] [9 15]])
 
 (defn cart [& lists]
   (let [syms (for [_ lists] (gensym))]
