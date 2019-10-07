@@ -46,7 +46,7 @@
   (let [offset [0 2 1 -2]
         column (mod index columns)
         row (Math/floor (/ index columns))]
-    [(* column boxSize) (+ (* row (- boxSize 0.5)) (get offset column))]))
+    [(* column boxSize) (+ (* row (- boxSize 0.5)) (get offset column)) 0]))
 
 (def switch-positions (map get-position (range switch-count)))
 
@@ -57,8 +57,14 @@
   (union (map #(translate % switch-shell) switch-positions)))
 
 (def connector-end
-  (scale [1 1 1.2] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 5] (sphere 1)))))
+  (union (cylinder [1 0] 1.8) (translate [0 0 -0.5] (cylinder 1 1.2))))
 
+(defn get-connector [start end]
+  (hull
+   (translate start connector-end)
+   (translate end connector-end)))
+
+(def vertical-matches [[14 0] [13 1] [12 2] [11 3] [10 4]])
 (def horizontal-matches [[5 19] [6 18] [7 17] [8 16] [9 15]])
 
 (defn cart [& lists]
@@ -66,18 +72,34 @@
     (eval `(for [~@(mapcat #(list %1 `'~%2) syms lists)]
              (list ~@syms)))))
 
-(defn get-connector [start end]
-  (hull
-   (translate start connector-end)
-   (translate end connector-end)))
+(def vertical-connectors
+  (map
+   (fn [[index [from to]]] [[index from] [(+ index columns) to]])
+   (cart (range (- switch-count columns)) vertical-matches)))
 
-(def horizontal-connectors (cart (range switch-count) horizontal-matches))
-(println horizontal-connectors)
+(def horizontal-connectors
+  (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
+       (cart
+        (filter #(pos? (mod  (+ % 1) columns)) (range switch-count))
+        horizontal-matches)))
+
+(defn get-juncture [[index connector-id]]
+  (let [[x y z] (get-position index)
+        base (/ switch-min-width 2)
+        offsets [-5.9 -3 0 3 5.9]
+        baseX (into [] (concat offsets (take 5 (repeat base)) (reverse offsets) (take 5 (repeat (* base -1)))))
+        baseY (into [] (concat (take 5 (repeat base)) (reverse offsets) (take 5 (repeat (* base -1))) offsets))
+        baseZ (+ (/ thickness -2) 1.5)]
+    [(+ (get baseX connector-id) x) (+ (get baseY connector-id) y) (- baseZ z)]))
+
+(def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
 (def keyboard
   (union
-   (get-connector [0 0 0] [0 50 0])
    (difference
     (hull switch-shells)
+    (get-connectors vertical-connectors)
+    (get-connectors horizontal-connectors)
     switch-cutouts)))
+
 (spit "example.scad" (write-scad keyboard))
