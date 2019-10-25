@@ -13,9 +13,8 @@
 (def rows 2)
 (def columns 3)
 (def switch-count (* rows columns))
-(def shell-corner-radius 1)
-(def shell-corner (binding [*fn* 5] (sphere shell-corner-radius)))
-(def shell-corner-offset (- (+ (/ switch-min-width 2) 2.5) shell-corner-radius))
+
+(def shell-corner-offset (+ switch-max-width 2.5))
 (def switch-holder-cutout
   (union
    (cube switch-min-width switch-min-width thickness)
@@ -28,19 +27,18 @@
 
    (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
 
-(def shell-top (- (/ thickness 2) shell-corner-radius))
-(def shell-bottom (+ (/ thickness -2) shell-corner-radius))
+(defn cart [& lists]
+  (let [syms (for [_ lists] (gensym))]
+    (eval `(for [~@(mapcat #(list %1 `'~%2) syms lists)]
+             (list ~@syms)))))
+
+(defn round-cube [x y z radius]
+  (let [corner (translate (map #(- (/ % 2) 1) [x y z]) (binding [*fn* 5] (sphere radius)))
+        level (map #(mirror [(nth % 0) (nth % 1) 0] corner) (cart [0 1] [0 1]))]
+    (hull level (mirror [0 0 1] level))))
 
 (def switch-shell
-  (union
-   (translate [shell-corner-offset shell-corner-offset shell-top] shell-corner)
-   (translate [(* shell-corner-offset -1) shell-corner-offset shell-top] shell-corner)
-   (translate [shell-corner-offset (* shell-corner-offset -1) shell-top] shell-corner)
-   (translate [(* shell-corner-offset -1) (* shell-corner-offset -1) shell-top] shell-corner)
-   (translate [shell-corner-offset shell-corner-offset shell-bottom] shell-corner)
-   (translate [(* shell-corner-offset -1) shell-corner-offset shell-bottom] shell-corner)
-   (translate [shell-corner-offset (* shell-corner-offset -1) shell-bottom] shell-corner)
-   (translate [(* shell-corner-offset -1) (* shell-corner-offset -1) shell-bottom] shell-corner)))
+  (round-cube shell-corner-offset shell-corner-offset thickness 1))
 
 (defn get-position [index]
   (let [offset [0 2 1 -2]
@@ -67,11 +65,6 @@
 (def vertical-matches [[14 0] [13 1] [12 2] [11 3] [10 4]])
 (def horizontal-matches [[5 19] [6 18] [7 17] [8 16] [9 15]])
 
-(defn cart [& lists]
-  (let [syms (for [_ lists] (gensym))]
-    (eval `(for [~@(mapcat #(list %1 `'~%2) syms lists)]
-             (list ~@syms)))))
-
 (def vertical-connectors
   (map
    (fn [[index [from to]]] [[index from] [(+ index columns) to]])
@@ -94,8 +87,24 @@
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
+(defn fuzzy-cube [x y z offset]
+  (hull
+   (cube x y (- z offset))
+   (cube (- x offset) (- y offset) z)))
+
+(def controller-holder
+  (translate
+   [-20 2.8 (/ thickness -2)]
+   (union
+    (translate [0 2.7 1.5] (fuzzy-cube 18.9 34 1.8 1.6))
+    (translate [0 3.1 2.25] (cube 17.9 33.2 1.6))
+    (translate [5.5 1.75 0] (cube 7 30.5 3))
+    (translate [-5.5 1.75 0] (cube 7 30.5 3))
+    (translate [0 1.75 0] (cube 7 26 3)))))
+
 (def keyboard
   (union
+   controller-holder
    (difference
     (hull switch-shells)
     (get-connectors vertical-connectors)
