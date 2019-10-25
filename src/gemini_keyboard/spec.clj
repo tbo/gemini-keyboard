@@ -33,9 +33,12 @@
              (list ~@syms)))))
 
 (defn round-cube [x y z radius]
-  (let [corner (translate (map #(- (/ % 2) 1) [x y z]) (binding [*fn* 5] (sphere radius)))
-        level (map #(mirror [(nth % 0) (nth % 1) 0] corner) (cart [0 1] [0 1]))]
-    (hull level (mirror [0 0 1] level))))
+  (let [corner (binding [*fn* 8] (sphere radius))
+        dimensions (map #(- (/ % 2) radius) [x y z])]
+    (hull
+     (map
+      #(translate (mapv * % dimensions) corner)
+      (apply cart (repeat 3 [1 -1]))))))
 
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1))
@@ -97,7 +100,7 @@
    [-20 2.8 (/ thickness -2)]
    (union
     (translate [0 2.7 1.5] (fuzzy-cube 18.9 34 1.8 1.6))
-    (translate [0 3.1 2.25] (cube 17.9 33.2 1.6))
+    (translate [0 3.1 2.25] (round-cube 17.9 33.2 1.6 1))
     (translate [5.5 1.75 0] (cube 7 30.5 3))
     (translate [-5.5 1.75 0] (cube 7 30.5 3))
     (translate [0 1.75 0] (cube 7 26 3)))))
