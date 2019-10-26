@@ -3,18 +3,25 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-(def switch-min-width 13.9)
+(def switch-min-width 13.8)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.1)
+
+(defn fuzzy-cube [x y z offset]
+  (hull
+   (cube x y (- z offset))
+   (cube (- x offset) (- y offset) z)))
+
 (def latch (cube switch-max-width 4.9 0.7))
+(def new-latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
 (def boxSize (+ switch-min-width (* spacing 2)))
 (fs! 120)
 (def rows 2)
-(def columns 3)
+(def columns 2)
 (def switch-count (* rows columns))
 
-(def shell-corner-offset (+ switch-max-width 2.5))
+(def shell-corner-offset (+ switch-max-width 5.5))
 (def switch-holder-cutout
   (union
    (cube switch-min-width switch-min-width thickness)
@@ -23,9 +30,8 @@
          (translate [0 0 -1]))
     (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) 3.5)
          (translate [0 0 -3])))
-   (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
-
-   (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
+   (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] new-latch)
+   (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] new-latch)))
 
 (defn cart [& lists]
   (let [syms (for [_ lists] (gensym))]
@@ -41,7 +47,7 @@
       (apply cart (repeat 3 [1 -1]))))))
 
 (def switch-shell
-  (round-cube shell-corner-offset shell-corner-offset thickness 1))
+  (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
 
 (defn get-position [index]
   (let [offset [0 2 1 -2]
@@ -90,28 +96,34 @@
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
-(defn fuzzy-cube [x y z offset]
-  (hull
-   (cube x y (- z offset))
-   (cube (- x offset) (- y offset) z)))
-
 (def controller-holder
   (translate
-   [-20 2.8 (/ thickness -2)]
-   (union
-    (translate [0 2.7 1.5] (fuzzy-cube 18.9 34 1.8 1.6))
-    (translate [0 3.1 2.25] (round-cube 17.9 33.2 1.6 1))
-    (translate [5.5 1.75 0] (cube 7 30.5 3))
-    (translate [-5.5 1.75 0] (cube 7 30.5 3))
-    (translate [0 1.75 0] (cube 7 26 3)))))
+   [-20.7 9 0]
+   (difference
+    (round-cube 23 37 thickness 1.3)
+    (translate [0 1.3 1.5] (fuzzy-cube 18.5 35.0 1.8 1.6))
+    (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
+    (translate [5.5 -0.25 -1] (cube 7 30.5 3.23))
+    (translate [-5.5 -0.25 -1] (cube 7 30.5 3.23))
+    (translate [0 -0.25 -1] (cube 7 22 3.23)))))
 
 (def keyboard
   (union
-   controller-holder
+   ;; new-latch
    (difference
-    (hull switch-shells)
+    (union (hull switch-shells) controller-holder)
+    (get-connector (get-juncture [2 15]) [-15 9 0])
+    (get-connector (get-juncture [2 16]) [-15 12 0])
+    (get-connector (get-juncture [2 17]) [-15 15 0])
+    (get-connector (get-juncture [2 18]) [-15 18 0])
+    (get-connector (get-juncture [2 19]) [-15 21 0])
+    (get-connector (get-juncture [0 19]) [-15 9 0])
+    (get-connector (get-juncture [0 18]) [-15 6 0])
+    (get-connector (get-juncture [0 17]) [-15 3 0])
+    (get-connector (get-juncture [0 16]) [-15 0 0])
+    (get-connector (get-juncture [0 15]) [-15 -3 0])
     (get-connectors vertical-connectors)
     (get-connectors horizontal-connectors)
     switch-cutouts)))
 
-(spit "example.scad" (write-scad keyboard))
+(spit "gemini.scad" (write-scad keyboard))
