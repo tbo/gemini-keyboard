@@ -15,3 +15,5 @@ pom.xml.asc
 .lsp/
 .project
 gemini-keyboard.iml
+*.stl
+*.scad

@@ -71,8 +71,8 @@
    (translate start connector-end)
    (translate end connector-end)))
 
-(def vertical-matches [[14 0] [13 1] [12 2] [11 3] [10 4]])
-(def horizontal-matches [[5 19] [6 18] [7 17] [8 16] [9 15]])
+(def vertical-matches [[11 0] [10 1]  [9 2] [8 3]])
+(def horizontal-matches [[4 15] [5 14]  [6 13] [7 12]])
 
 (def vertical-connectors
   (map
@@ -88,9 +88,9 @@
 (defn get-juncture [[index connector-id]]
   (let [[x y z] (get-position index)
         base (/ switch-min-width 2)
-        offsets [-5.9 -3 0 3 5.9]
-        baseX (into [] (concat offsets (take 5 (repeat base)) (reverse offsets) (take 5 (repeat (* base -1)))))
-        baseY (into [] (concat (take 5 (repeat base)) (reverse offsets) (take 5 (repeat (* base -1))) offsets))
+        offsets [-6 -2 2 6]
+        baseX (into [] (concat offsets (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1)))))
+        baseY (into [] (concat (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1))) offsets))
         baseZ (+ (/ thickness -2) 1.5)]
     [(+ (get baseX connector-id) x) (+ (get baseY connector-id) y) (- baseZ z)]))
 
@@ -108,22 +108,18 @@
     (translate [0 -0.25 -1] (cube 7 22 3.23)))))
 
 (def keyboard
-  (union
-   ;; new-latch
-   (difference
-    (union (hull switch-shells) controller-holder)
-    (get-connector (get-juncture [2 15]) [-15 9 0])
-    (get-connector (get-juncture [2 16]) [-15 12 0])
-    (get-connector (get-juncture [2 17]) [-15 15 0])
-    (get-connector (get-juncture [2 18]) [-15 18 0])
-    (get-connector (get-juncture [2 19]) [-15 21 0])
-    (get-connector (get-juncture [0 19]) [-15 9 0])
-    (get-connector (get-juncture [0 18]) [-15 6 0])
-    (get-connector (get-juncture [0 17]) [-15 3 0])
-    (get-connector (get-juncture [0 16]) [-15 0 0])
-    (get-connector (get-juncture [0 15]) [-15 -3 0])
-    (get-connectors vertical-connectors)
-    (get-connectors horizontal-connectors)
-    switch-cutouts)))
+  (difference
+   (union (hull switch-shells) controller-holder)
+   (get-connector (get-juncture [2 12]) [-15 10 0])
+   (get-connector (get-juncture [2 13]) [-15 13 0])
+   (get-connector (get-juncture [2 14]) [-15 17 0])
+   (get-connector (get-juncture [2 15]) [-15 21 0])
+   (get-connector (get-juncture [0 15]) [-15 8 0])
+   (get-connector (get-juncture [0 14]) [-15 5 0])
+   (get-connector (get-juncture [0 13]) [-15 1 0])
+   (get-connector (get-juncture [0 12]) [-15 -3 0])
+   (get-connectors vertical-connectors)
+   (get-connectors horizontal-connectors)
+   switch-cutouts))
 
 (spit "gemini.scad" (write-scad keyboard))
