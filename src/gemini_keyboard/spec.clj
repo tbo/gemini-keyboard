@@ -13,8 +13,7 @@
    (cube x y (- z offset))
    (cube (- x offset) (- y offset) z)))
 
-(def latch (cube switch-max-width 4.9 0.7))
-(def new-latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
+(def latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
 (def boxSize (+ switch-min-width (* spacing 2)))
 (fs! 120)
 (def rows 2)
@@ -30,8 +29,8 @@
          (translate [0 0 -1]))
     (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) 3.5)
          (translate [0 0 -3])))
-   (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] new-latch)
-   (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] new-latch)))
+   (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
+   (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
 
 (defn cart [& lists]
   (let [syms (for [_ lists] (gensym))]
