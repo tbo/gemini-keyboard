@@ -3,7 +3,7 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-(def switch-min-width 13.5)
+(def switch-min-width 13.75)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
@@ -14,7 +14,7 @@
    (cube (- x offset) (- y offset) z)))
 
 (def latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
-(def boxSize (+ switch-min-width (* spacing 2) 0.3))
+(def boxSize (+ switch-min-width (* spacing 2) 0.05))
 (fs! 120)
 (def rows 3)
 (def columns 3)
@@ -27,7 +27,7 @@
    (hull
     (->> (cube switch-min-width switch-min-width (- thickness 2.52))
          (translate [0 0 -1]))
-    (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) (- thickness 1.52))
+    (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) (- thickness 2.52))
          (translate [0 0 -3])))
    (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
    (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
@@ -79,7 +79,7 @@
 (def switch-shells (get-switch-group switch-shell))
 
 (def connector-end
-  (union (cylinder [1 0] 1.8) (translate [0 0 -0.5] (cylinder 1 1.2))))
+  (union (cylinder [1 0] 1.5) (translate [0 0 -1] (cylinder 1 0.9))))
 
 (defn get-connector [start end]
   (hull
@@ -106,7 +106,7 @@
         offsets [-6 -2 2 6]
         baseX (into [] (concat offsets (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1)))))
         baseY (into [] (concat (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1))) offsets))
-        baseZ (+ (/ thickness -2) 1.5)
+        baseZ (+ (/ thickness -2) 2.1)
         [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
     [(+ a x) (+ b y) (- c z)]))
 
