@@ -23,11 +23,14 @@
 (def shell-corner-offset (+ switch-max-width 5.5))
 (def switch-holder-cutout
   (union
-   (cube switch-min-width switch-min-width thickness)
-   (hull
-    (->> (cube switch-min-width switch-min-width (- thickness 2.52))
-         (translate [0 0 -1]))
-    (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) (- thickness 2.52))
+   (difference
+    (hull
+     (cube switch-min-width switch-min-width thickness)
+     (->> (cube switch-min-width switch-min-width (- thickness 2.52))
+          (translate [0 0 -1]))
+     (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) (- thickness 2.52))
+          (translate [0 0 -2.7])))
+    (->> (cube (+ switch-min-width 2.5) 4 1.5)
          (translate [0 0 -3])))
    (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
    (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
@@ -106,7 +109,7 @@
         offsets [-6 -2 2 6]
         baseX (into [] (concat offsets (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1)))))
         baseY (into [] (concat (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1))) offsets))
-        baseZ (+ (/ thickness -2) 2.1)
+        baseZ (+ (/ thickness -2) 2.2)
         [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
     [(+ a x) (+ b y) (- c z)]))
 
