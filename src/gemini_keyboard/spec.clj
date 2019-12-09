@@ -20,18 +20,39 @@
 (def columns 3)
 (def switch-count (- (* rows columns) 2))
 
+;; (def diode-holder
+;;   (let
+;;    [x 1.5
+;;     z 3.2]
+;;     (translate [(+ (/ (+ switch-min-width 2.5) -2) (/ x 2)) 0 (+ (/ thickness -2) (/ z 2))]
+;;                (difference
+;;                 (cube x 5 z)
+;;                 (translate [0 0 0.4] (cube (+ x 0.01) 3.7 3.2))
+;;                 (translate [0.75 0 0.6] (cube 2 8 2.7))))))
+
+(def diode-holder
+  (let
+   [x 1.5
+    z 2.8]
+    (translate
+     [-5.5 0 (+ (/ thickness -2) (/ z 2))]
+     (difference
+      (fuzzy-cube 7 5.5 z 0.6)
+      (translate [-0.4 0 0] (binding [*fn* 12] (cylinder 1.2 (+ z 0.01))))
+      (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
+      (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
+
 (def shell-corner-offset (+ switch-max-width 5.5))
 (def switch-holder-cutout
   (union
    (difference
-    (hull
+    (union
      (cube switch-min-width switch-min-width thickness)
-     (->> (cube switch-min-width switch-min-width (- thickness 2.52))
-          (translate [0 0 -1]))
-     (->> (cube (+ switch-min-width 2.5) (+ switch-min-width 2.5) (- thickness 2.52))
-          (translate [0 0 -2.7])))
-    (->> (cube (+ switch-min-width 2.5) 4 1.5)
-         (translate [0 0 -3])))
+     (hull
+      (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.0001))
+      (translate [0 0 (/ thickness -2)] (cube (+ switch-min-width 2.7) (+ switch-min-width 2.7) 0.0001))))
+
+    (translate [0 0 0] diode-holder))
    (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
    (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
 
@@ -82,15 +103,15 @@
 (def switch-shells (get-switch-group switch-shell))
 
 (def connector-end
-  (union (cylinder [1 0] 1.5) (translate [0 0 -1] (cylinder 1 0.9))))
+  (union (cylinder [1.2 0] 1.7) (translate [0 0 -1] (cylinder 1.2 0.9))))
 
 (defn get-connector [start end]
   (hull
    (translate start connector-end)
    (translate end connector-end)))
 
-(def vertical-matches [[11 0] [10 1]  [9 2] [8 3]])
-(def horizontal-matches [[4 15] [5 14]  [6 13] [7 12]])
+(def vertical-matches [[4 1]])
+(def horizontal-matches [[2 7] [3 6]])
 
 (def vertical-connectors
   (map
@@ -106,9 +127,10 @@
 (defn get-juncture [[index connector-id]]
   (let [[x y z rx ry rz] (get-position index)
         base (/ switch-min-width 2)
-        offsets [-6 -2 2 6]
-        baseX (into [] (concat offsets (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1)))))
-        baseY (into [] (concat (take 4 (repeat base)) (reverse offsets) (take 4 (repeat (* base -1))) offsets))
+        offsetsX [-6 0]
+        offsetsY [-4.5 6]
+        baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
+        baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
         baseZ (+ (/ thickness -2) 2.2)
         [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
     [(+ a x) (+ b y) (- c z)]))
@@ -129,16 +151,24 @@
 (def keyboard
   (difference
    (union switch-shells controller-holder)
-   (get-connector (get-juncture [columns 12]) [-15 -21 0])
-   (get-connector (get-juncture [columns  13]) [-15 -18 0])
-   (get-connector (get-juncture [columns 14]) [-15 -14 0])
-   (get-connector (get-juncture [columns 15]) [-15 -10 0])
-   (get-connector (get-juncture [0 15]) [-15 4 0])
-   (get-connector (get-juncture [0 14]) [-15 0 0])
-   (get-connector (get-juncture [0 13]) [-15 -4 0])
-   (get-connector (get-juncture [0 12]) [-15 -8 0])
+   (get-connector (get-juncture [columns 6]) [-15 -21 0])
+   (get-connector (get-juncture [columns 7]) [-15 -12 0])
+   (get-connector (get-juncture [0 7]) [-15 4 0])
+   (get-connector (get-juncture [0 6]) [-15 -6 0])
    (get-connectors vertical-connectors)
    (get-connectors horizontal-connectors)
    switch-cutouts))
 
+(def tool
+  (let
+   [z 2.0]
+    (union
+     (translate [0.8 3.9 1] (binding [*fn* 15] (cylinder 0.8 4)))
+     (difference
+      (fuzzy-cube 12 10 z 0.6)
+      (translate [0 -0.5 0.6] (cube 1.9 4.0 (- z 0.6)))
+      (translate [0 0 0.8] (cube 0.5 20 (- z 0.6)))
+      (translate [0 3.8 1.0] (fuzzy-cube 30 3 2 0.6))))))
+
 (spit "gemini.scad" (write-scad keyboard))
+(spit "tool.scad" (write-scad tool))
