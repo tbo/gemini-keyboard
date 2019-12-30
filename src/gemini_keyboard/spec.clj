@@ -16,9 +16,9 @@
 (def latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
 (def boxSize (+ switch-min-width (* spacing 2) 0.05))
 (fs! 120)
-(def rows 3)
-(def columns 3)
-(def switch-count (- (* rows columns) 2))
+(def rows 5)
+(def columns 6)
+(def switch-count (- (* rows columns) 3))
 
 ;; (def diode-holder
 ;;   (let
@@ -32,8 +32,7 @@
 
 (def diode-holder
   (let
-   [x 1.5
-    z 2.8]
+   [z 2.8]
     (translate
      [-5.5 0 (+ (/ thickness -2) (/ z 2))]
      (difference
@@ -49,8 +48,8 @@
     (union
      (cube switch-min-width switch-min-width thickness)
      (hull
-      (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.0001))
-      (translate [0 0 (/ thickness -2)] (cube (+ switch-min-width 2.7) (+ switch-min-width 2.7) 0.0001))))
+      (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
+      (translate [0 0 (/ thickness -2)] (cube (+ switch-min-width 2.7) (+ switch-min-width 2.7) 0.001))))
 
     (translate [0 0 0] diode-holder))
    (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
@@ -89,11 +88,31 @@
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
 
+(defn get-row [index]
+  (condp contains? index
+    #{0 1 2 3 4} 0
+    #{5 6 7 8 9} 1
+    #{10 11 12 13 14 15} 2
+    #{16 17 18 19 20 21} 3
+    4))
+
+(defn get-column [index]
+  (condp contains? index
+    #{10 16 22} 0
+    #{0 5 11 17 23} 1
+    #{1 6 12 18 24} 2
+    #{2 7 13 19 25} 3
+    #{3 8 14 20 26} 4
+    5))
+
 (defn get-position [index]
-  (let [offset [0 2 1 -2]
-        column (mod index columns)
-        row (Math/floor (/ index columns))]
-    [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column) (if (= index 6) -1.5 0)) 0  0 0 (if (= index 6) 0.15 0)]))
+  (let [offset [0 0 0 2 1 -2]
+        column (get-column index)
+        row (get-row index)]
+    (case index
+      22 [(- (* column boxSize) 1.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -3.8) 0 0 0 0.19]
+      23 [(- (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.0) 0 0 0 0.10]
+      [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
 (def switch-positions (map get-position (range switch-count)))
 
@@ -103,26 +122,32 @@
 (def switch-shells (get-switch-group switch-shell))
 
 (def connector-end
-  (union (cylinder [1.2 0] 1.7) (translate [0 0 -1] (cylinder 1.2 0.9))))
+  (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1))))
 
 (defn get-connector [start end]
   (hull
    (translate start connector-end)
    (translate end connector-end)))
 
-(def vertical-matches [[4 1]])
 (def horizontal-matches [[2 7] [3 6]])
 
 (def vertical-connectors
-  (map
-   (fn [[index [from to]]] [[index from] [(+ index columns) to]])
-   (cart (range (- switch-count columns)) vertical-matches)))
+  (loop
+   [switches (sort #(compare (get-column %1) (get-column %2)) (range switch-count))
+    result []]
+    (if (> (count switches) 1)
+      (if (= (get-column (first switches)) (get-column (second switches)))
+        (recur (next switches) (conj result (vector [(first switches) 4] [(second switches) 1])))
+        (recur (next switches) result))
+      result)))
 
 (def horizontal-connectors
   (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
        (cart
-        (filter #(pos? (mod  (+ % 1) columns)) (range (- switch-count 1)))
+        (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
         horizontal-matches)))
+
+(def connector-base-offset (+ (/ thickness -2) 2.2))
 
 (defn get-juncture [[index connector-id]]
   (let [[x y z rx ry rz] (get-position index)
@@ -131,7 +156,7 @@
         offsetsY [-4.5 6]
         baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
         baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
-        baseZ (+ (/ thickness -2) 2.2)
+        baseZ connector-base-offset
         [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
     [(+ a x) (+ b y) (- c z)]))
 
@@ -139,10 +164,14 @@
 
 (def controller-holder
   (translate
-   [-20.7 -9 0]
-   (difference
-    (round-cube 23 37 thickness 1.3)
-    (translate [0 1.3 1.5] (fuzzy-cube 18.5 35.0 1.8 1.6))
+   [(- boxSize 20.7) -6 0]
+   (round-cube 23 37 thickness 1.3)))
+
+(def controller-holder-cutout
+  (translate
+   [(- boxSize 20.7) -6 0]
+   (union
+    (translate [0 1.25 1.5] (fuzzy-cube 18.5 35.0 1.8 1.6))
     (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
     (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
     (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
@@ -150,14 +179,18 @@
 
 (def keyboard
   (difference
-   (union switch-shells controller-holder)
-   (get-connector (get-juncture [columns 6]) [-15 -21 0])
-   (get-connector (get-juncture [columns 7]) [-15 -12 0])
-   (get-connector (get-juncture [0 7]) [-15 4 0])
-   (get-connector (get-juncture [0 6]) [-15 -6 0])
-   (get-connectors vertical-connectors)
-   (get-connectors horizontal-connectors)
-   switch-cutouts))
+   (hull switch-shells controller-holder)
+   (union
+    controller-holder-cutout
+    switch-cutouts
+    (get-connector (get-juncture [0 7]) [0 2 connector-base-offset])
+    (get-connector (get-juncture [0 6]) [0 -5  connector-base-offset])
+    (get-connector (get-juncture [5 7]) [0 -12  connector-base-offset])
+    (get-connector (get-juncture [5 6]) [0 -14  connector-base-offset])
+    (get-connector (get-juncture [10 0]) [-8 -20  connector-base-offset])
+    (get-connector [2.5 -35 connector-base-offset] [3 -20 connector-base-offset])
+    (get-connectors vertical-connectors)
+    (get-connectors horizontal-connectors))))
 
 (def tool
   (let
