@@ -20,16 +20,6 @@
 (def columns 6)
 (def switch-count (- (* rows columns) 3))
 
-;; (def diode-holder
-;;   (let
-;;    [x 1.5
-;;     z 3.2]
-;;     (translate [(+ (/ (+ switch-min-width 2.5) -2) (/ x 2)) 0 (+ (/ thickness -2) (/ z 2))]
-;;                (difference
-;;                 (cube x 5 z)
-;;                 (translate [0 0 0.4] (cube (+ x 0.01) 3.7 3.2))
-;;                 (translate [0.75 0 0.6] (cube 2 8 2.7))))))
-
 (def diode-holder
   (let
    [z 2.8]
