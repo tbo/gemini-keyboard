@@ -193,5 +193,19 @@
       (translate [0 0 0.8] (cube 0.5 20 (- z 0.6)))
       (translate [0 3.8 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
+(def palm-rest
+  (let [b (binding [*fn* 32] (sphere 1.5))
+        t (scale [1 1 1.5] b)]
+    (hull
+     (translate [-45 -23 0] b)
+     (translate [-45 23 0] b)
+     (translate [45 -23 0] b)
+     (translate [45 23 0] b)
+     (translate [-45 -23 9.6] t)
+     (translate [-45 23 9.6] t)
+     (translate [45 -23 9.6] t)
+     (translate [45 23 9.6] t))))
+
 (spit "gemini.scad" (write-scad keyboard))
 (spit "tool.scad" (write-scad tool))
+(spit "palm-rest.scad" (write-scad palm-rest))
