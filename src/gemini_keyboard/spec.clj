@@ -152,20 +152,22 @@
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
+(def controller-holder-cutout
+  (translate
+   [(- boxSize 20.7) -6 0]
+   (difference
+   (union
+    (translate [0 21 1.5] (fuzzy-cube 18.5 75.0 1.8 1.6))
+    (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
+    (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
+    (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
+    (translate [0 -0.25 -1.2] (cube 7 22 (- thickness 1.87))))
+    (translate [0 18.4 0.5] (cube 18.5 0.6 0.6)))))
+
 (def controller-holder
   (translate
    [(- boxSize 20.7) -6 0]
    (round-cube 23 37 thickness 1.3)))
-
-(def controller-holder-cutout
-  (translate
-   [(- boxSize 20.7) -6 0]
-   (union
-    (translate [0 1.25 1.5] (fuzzy-cube 18.5 35.0 1.8 1.6))
-    (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
-    (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-    (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-    (translate [0 -0.25 -1.2] (cube 7 22 (- thickness 1.87))))))
 
 (def keyboard
   (difference
