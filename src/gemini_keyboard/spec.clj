@@ -96,11 +96,11 @@
     5))
 
 (defn get-position [index]
-  (let [offset [0 0 0 2 1 -2]
+  (let [offset [-2 0 0 4 3 -3]
         column (get-column index)
         row (get-row index)]
     (case index
-      22 [(- (* column boxSize) 1.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -3.8) 0 0 0 0.19]
+      22 [(- (* column boxSize) 1.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.8) 0 0 0 0.19]
       23 [(- (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.0) 0 0 0 0.10]
       [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
@@ -154,19 +154,19 @@
 
 (def controller-holder-cutout
   (translate
-   [(- boxSize 20.7) -6 0]
+   [(- boxSize 19.2) -11 0]
    (difference
-   (union
-    (translate [0 21 1.5] (fuzzy-cube 18.5 75.0 1.8 1.6))
-    (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
-    (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-    (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-    (translate [0 -0.25 -1.2] (cube 7 22 (- thickness 1.87))))
-    (translate [0 18.4 0.5] (cube 18.5 0.6 0.6)))))
+    (union
+     (translate [0 21 1.5] (fuzzy-cube 18.5 75.0 1.8 1.6))
+     (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
+     (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
+     (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
+     (translate [0 -0.25 -1.2] (cube 7 22 (- thickness 1.87))))
+    (translate [0 28.4 0.5] (cube 18.5 20.0 0.8)))))
 
 (def controller-holder
   (translate
-   [(- boxSize 20.7) -6 0]
+   [(- boxSize 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
 
 (def keyboard
@@ -175,12 +175,12 @@
    (union
     controller-holder-cutout
     switch-cutouts
-    (get-connector (get-juncture [0 7]) [0 2 connector-base-offset])
-    (get-connector (get-juncture [0 6]) [0 -5  connector-base-offset])
-    (get-connector (get-juncture [5 7]) [0 -12  connector-base-offset])
-    (get-connector (get-juncture [5 6]) [0 -14  connector-base-offset])
-    (get-connector (get-juncture [10 0]) [-8 -20  connector-base-offset])
-    (get-connector [2.5 -35 connector-base-offset] [3 -20 connector-base-offset])
+    (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
+    (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
+    (get-connector (get-juncture [5 7]) [1.5 -17  connector-base-offset])
+    (get-connector (get-juncture [5 6]) [1.5 -19  connector-base-offset])
+    (get-connector (get-juncture [10 0]) [-6 -20  connector-base-offset])
+    (get-connector [2.5 -35 connector-base-offset] [5 -20 connector-base-offset])
     (get-connectors vertical-connectors)
     (get-connectors horizontal-connectors))))
 
