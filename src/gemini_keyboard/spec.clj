@@ -159,9 +159,8 @@
     (union
      (translate [0 21 1.5] (fuzzy-cube 18.5 75.0 1.8 1.6))
      (translate [0 3.5 2.25] (cube 16.9 37.8 1.6))
-     (translate [5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-     (translate [-5.5 -0.25 -1.2] (cube 6.2 30.5 (- thickness 1.87)))
-     (translate [0 -0.25 -1.2] (cube 7 22 (- thickness 1.87))))
+     (translate [4.5 -0.25 -1.2] (cube 7.2 30.5 (- thickness 1.87)))
+     (translate [-4.5 -0.25 -1.2] (cube 7.2 30.5 (- thickness 1.87))))
     (translate [0 28.4 0.5] (cube 18.5 20.0 0.8)))))
 
 (def controller-holder
@@ -169,9 +168,31 @@
    [(- boxSize 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
 
+(def palm-rest
+  (let [b (binding [*fn* 8] (sphere 1.5))]
+    (translate [0 0 (+ (/ thickness -2) 1.5)]
+               (hull
+                (translate [-45 -23 0] b)
+                (translate [-45 23 0] b)
+                (translate [45 -23 0] b)
+                (translate [45 23 0] b)
+                (translate [-45 -23 9.6] b)
+                (translate [-45 23 (/ thickness 2)] b)
+                (translate [-45 0 9.6] b)
+                (translate [-22 23 9.6] b)
+                (translate [45 -23 9.6] b)
+                (translate [45 23 9.6] b)))))
+
+(def palm-rest-base (round-cube 93 0 thickness 1.5))
+
 (def keyboard
   (difference
-   (hull switch-shells controller-holder)
+   (union
+    (hull
+     switch-shells
+     controller-holder
+     (translate [60 -113 0] palm-rest-base))
+    (translate [60 -136 0] palm-rest))
    (union
     controller-holder-cutout
     switch-cutouts
@@ -194,19 +215,6 @@
       (translate [0 -0.5 0.6] (cube 1.9 4.0 (- z 0.6)))
       (translate [0 0 0.8] (cube 0.5 20 (- z 0.6)))
       (translate [0 3.8 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
-
-(def palm-rest
-  (let [b (binding [*fn* 32] (sphere 1.5))
-        t (scale [1 1 1.5] b)]
-    (hull
-     (translate [-45 -23 0] b)
-     (translate [-45 23 0] b)
-     (translate [45 -23 0] b)
-     (translate [45 23 0] b)
-     (translate [-45 -23 9.6] t)
-     (translate [-45 23 9.6] t)
-     (translate [45 -23 9.6] t)
-     (translate [45 23 9.6] t))))
 
 (spit "gemini.scad" (write-scad keyboard))
 (spit "tool.scad" (write-scad tool))
