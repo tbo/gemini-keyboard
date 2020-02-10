@@ -156,22 +156,31 @@
    [(- boxSize 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
 
-(def palm-rest
-  (let [b (binding [*fn* 8] (sphere 1.5))]
+(def wrist-rest
+  (let [t1 1.5
+        r 15
+        x (- 46 r t1)
+        -x (* x -1)
+        y (- 24 r t1)
+        -y (* y -1)
+        t2 4
+        z (- 11.1 t2)
+        b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
+        c (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2))))]
     (translate [0 0 (+ (/ thickness -2) 1.5)]
                (hull
-                (translate [-45 -23 0] b)
-                (translate [-45 23 0] b)
-                (translate [45 -23 0] b)
-                (translate [45 23 0] b)
-                (translate [-45 -23 9.6] b)
-                (translate [-45 23 (/ thickness 2)] b)
-                (translate [-45 0 9.6] b)
-                (translate [-22 23 9.6] b)
-                (translate [45 -23 9.6] b)
-                (translate [45 23 9.6] b)))))
+                (translate [-x -y 0] b)
+                (translate [-x y 0] b)
+                (translate [x -y 0] b)
+                (translate [x y 0] b)
+                (translate [-x -y z] c)
+                (translate [-x y (/ thickness 2)] b)
+                (translate [-x 0 z] c)
+                (translate [-y y z] c)
+                (translate [x -y z] c)
+                (translate [x y z] c)))))
 
-(def palm-rest-base (round-cube 93 0 thickness 1.5))
+(def wrist-rest-base (let [t 80] (difference wrist-rest (translate [0 0 (+ (/  thickness 2) (/ t 2))] (cube 1000 1000 t)))))
 
 (defn get-keyboard [orientation]
   (def switch-holder-cutout
@@ -196,8 +205,8 @@
      (hull
       switch-shells
       controller-holder
-      (translate [60 -113 0] palm-rest-base))
-     (translate [60 -136 0] palm-rest))
+      (translate [60 -113 0] wrist-rest-base))
+     (translate [60 -136 0] wrist-rest))
     (union
      controller-holder-cutout
      switch-cutouts
@@ -230,4 +239,5 @@
 (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
 (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
 (spit "tool.scad" (write-scad tool))
-(spit "palm-rest.scad" (write-scad palm-rest))
+(spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5)))))))
+
