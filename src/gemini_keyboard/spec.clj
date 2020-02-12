@@ -158,7 +158,7 @@
 
 (def wrist-rest
   (let [t1 1.5
-        r 15
+        r 10
         x (- 46 r t1)
         -x (* x -1)
         y (- 24 r t1)
@@ -180,7 +180,7 @@
                 (translate [x -y z] c)
                 (translate [x y z] c)))))
 
-(def wrist-rest-base (let [t 80] (difference wrist-rest (translate [0 0 (+ (/  thickness 2) (/ t 2))] (cube 1000 1000 t)))))
+(def wrist-rest-base (round-cube 89 1 thickness 1.5))
 
 (defn get-keyboard [orientation]
   (def switch-holder-cutout
@@ -205,7 +205,7 @@
      (hull
       switch-shells
       controller-holder
-      (translate [60 -113 0] wrist-rest-base))
+      (translate [60 -124 0] wrist-rest-base))
      (translate [60 -136 0] wrist-rest))
     (union
      controller-holder-cutout
