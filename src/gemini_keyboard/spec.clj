@@ -231,10 +231,10 @@
     (union
      (translate [0.8 3.9 1] (binding [*fn* 15] (cylinder [0.8 0.6] 4)))
      (difference
-      (fuzzy-cube 12 10 z 0.6)
-      (translate [0 -0.5 0.6] (cube 1.9 4.0 (- z 0.6)))
-      (translate [0 0 0.8] (cube 0.5 20 (- z 0.6)))
-      (translate [0 3.8 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
+      (fuzzy-cube 12 9.2 z 0.6)
+      (translate [0 -0.9 0.6] (cube 1.9 4.0 (- z 0.6)))
+      (translate [0 -0.4 0.8] (cube 0.5 20 (- z 0.6)))
+      (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
 (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
 (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
