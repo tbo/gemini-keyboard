@@ -18,7 +18,7 @@
 (fs! 120)
 (def rows 5)
 (def columns 7)
-(def switch-count (- (* rows columns) 3))
+(def switch-count (-  (* rows columns) 2))
 
 (def diode-holder
   (let
@@ -65,31 +65,33 @@
 
 (defn get-row [index]
   (condp contains? index
-    #{0 1 2 3 4} 0
-    #{5 6 7 8 9} 1
-    #{10 11 12 13 14 15} 2
-    #{16 17 18 19 20 21} 3
+    #{0 1 2 3 4 5} 0
+    #{6 7 8 9 10 11} 1
+    #{12 13 14 15 16 17 18} 2
+    #{19 20 21 22 23 24 25} 3
     4))
 
 (defn get-column [index]
   (condp contains? index
-    #{10 16 22} 0
-    #{0 5 11 17 23} 1
-    #{1 6 12 18 24} 2
-    #{2 7 13 19 25} 3
-    #{3 8 14 20 26} 4
-    5))
+    #{12 19} 0
+    #{0 6 13 20} 1
+    #{1 7 14 21} 2
+    #{2 8 15 22 29 26 27 28} 3
+    #{3 9 16 23 30 31 32} 4
+    #{4 10 17 24 31} 5
+    6))
 
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
 
 (defn get-position [index]
-  (let [offset [-2 0 0 4 3 -3]
+  (let [offset [-4 -1 1 4.5 3.5 -5 -5.5]
         column (get-column index)
         row (get-row index)]
     (case index
-      22 [(- (* column boxSize) 1.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.8) 0 0 0 0.19]
-      23 [(- (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.0) 0 0 0 0.10]
+      12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0]
+      19 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0) -7) 0 0 0 0.19]
+      ;; 23 [(- (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.0) 0 0 0 0.10]
       [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
 (def switch-positions (map get-position (range switch-count)))
@@ -182,10 +184,11 @@
      switch-cutouts
      (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
      (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
-     (get-connector (get-juncture [5 7]) [1.5 -17  connector-base-offset])
-     (get-connector (get-juncture [5 6]) [1.5 -19  connector-base-offset])
-     (get-connector (get-juncture [10 0]) [-6 -20  connector-base-offset])
-     (get-connector [4 -30 connector-base-offset] [5 -20 connector-base-offset])
+     (get-connector (get-juncture [6 7]) [1.5 -17  connector-base-offset])
+     (get-connector (get-juncture [6 6]) [1.5 -19  connector-base-offset])
+     (get-connector (get-juncture [12 0]) [-6 -20  connector-base-offset])
+     (get-connector (get-juncture [12 1]) [0 -20  connector-base-offset])
+     (get-connector [4 -34 connector-base-offset] [5 -20 connector-base-offset])
      (get-connectors vertical-connectors)
      (get-connectors horizontal-connectors)))))
 
