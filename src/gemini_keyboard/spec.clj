@@ -17,7 +17,7 @@
 (def boxSize (+ switch-min-width (* spacing 2) 0.05))
 (fs! 120)
 (def rows 5)
-(def columns 6)
+(def columns 7)
 (def switch-count (- (* rows columns) 3))
 
 (def diode-holder
@@ -148,39 +148,12 @@
     (translate [0 25.7 4.0] (round-cube 10 13 8 0.5))
     (translate [0 0 1.5] (round-cube 18.3 33.3 1.8 0.3))
     (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
-    (translate [4.5 -0.25 -1.2] (cube 7.2 30.5 (- thickness 1.57)))
-    (translate [-4.5 -0.25 -1.2] (cube 7.2 30.5 (- thickness 1.57))))))
+    (translate [0 -0.25 -1.2] (cube 16.2 30.5 (- thickness 1.57))))))
 
 (def controller-holder
   (translate
    [(- boxSize 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
-
-(def wrist-rest
-  (let [t1 1.5
-        r 10
-        x (- 48 r t1)
-        -x (* x -1)
-        y (- 24 r t1)
-        -y (* y -1)
-        t2 4
-        z (- 11.1 t2)
-        b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
-        c (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2))))]
-    (translate [0 0 (+ (/ thickness -2) 1.5)]
-               (hull
-                (translate [-x -y 0] b)
-                (translate [-x y 0] b)
-                (translate [x -y 0] b)
-                (translate [x y 0] b)
-                (translate [-x -y z] c)
-                (translate [-x y (/ thickness 2)] b)
-                (translate [-x 0 z] c)
-                (translate [-y y z] c)
-                (translate [x -y z] c)
-                (translate [x y z] c)))))
-
-(def wrist-rest-base (round-cube 93 1 thickness 1.5))
 
 (defn get-keyboard [orientation]
   (def switch-holder-cutout
@@ -201,21 +174,12 @@
   (mirror
    [(if (= orientation :left) 1 0) 0 0]
    (difference
-    (union
-     (hull
-      switch-shells
-      controller-holder
-      (translate [68 -124 0] wrist-rest-base))
-     (translate [68 -136 0] wrist-rest))
+    (hull
+     switch-shells
+     controller-holder)
     (union
      controller-holder-cutout
      switch-cutouts
-     (get-connector [-2 2.5 connector-base-offset] [2 2.5 connector-base-offset])
-     (get-connector [-2 -2.75 connector-base-offset] [2 -2.75 connector-base-offset])
-     (get-connector [-2 -8 connector-base-offset] [2 -8 connector-base-offset])
-     (get-connector [-2 -13.25 connector-base-offset] [2 -13.25 connector-base-offset])
-     (get-connector [-2 -19.0 connector-base-offset] [2 -19.0 connector-base-offset])
-     (get-connector [-2 -24.5 connector-base-offset] [2 -24.5 connector-base-offset])
      (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
      (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
      (get-connector (get-juncture [5 7]) [1.5 -17  connector-base-offset])
