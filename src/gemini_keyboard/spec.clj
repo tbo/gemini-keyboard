@@ -3,7 +3,7 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-(def switch-min-width 13.75)
+(def switch-min-width 13.85)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
