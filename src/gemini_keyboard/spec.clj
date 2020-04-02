@@ -90,8 +90,7 @@
         row (get-row index)]
     (case index
       12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0]
-      19 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0) -7) 0 0 0 0.19]
-      ;; 23 [(- (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0)  -1.0) 0 0 0 0.10]
+      19 [(- (* column boxSize) 0.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0) -8) 0 0 0 0.19]
       [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
 (def switch-positions (map get-position (range switch-count)))
@@ -145,7 +144,7 @@
   (translate
    [(- boxSize 19.2) -11 0]
    (union
-    (translate [-10 10 -0.5] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [2 0.9] 4))))
+    (translate [-10 13 -0.6] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [1.9 1.6] 4))))
     (translate [0 23 3.85] (round-cube 8 13 4 0.5))
     (translate [0 25.7 4.0] (round-cube 10 13 8 0.5))
     (translate [0 0 1.5] (round-cube 18.3 33.3 1.8 0.3))
