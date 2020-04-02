@@ -145,8 +145,8 @@
    [(- boxSize 19.2) -11 0]
    (union
     (translate [-10 13 -0.6] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [1.9 1.6] 4))))
-    (translate [0 23 3.85] (round-cube 8 13 4 0.5))
-    (translate [0 25.7 4.0] (round-cube 10 13 8 0.5))
+    (translate [0 23 (- thickness 1.6 2.9)] (round-cube 8 23 thickness 0.5))
+    (translate [0 25.7 (- thickness 1.6 2.9 0.15)] (round-cube 10 13 8 0.5))
     (translate [0 0 1.5] (round-cube 18.3 33.3 1.8 0.3))
     (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
     (translate [0 -0.25 -1.2] (cube 16.2 30.5 (- thickness 1.57))))))
