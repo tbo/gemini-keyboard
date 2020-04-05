@@ -3,7 +3,7 @@
   (:require [scad-clj.scad :refer :all]
             [scad-clj.model :refer :all]))
 
-(def switch-min-width 13.85)
+(def switch-min-width 13.78)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
@@ -19,6 +19,7 @@
 (def rows 5)
 (def columns 7)
 (def switch-count (-  (* rows columns) 2))
+;; (def switch-count 2)
 
 (def diode-holder
   (let
@@ -89,7 +90,7 @@
         column (get-column index)
         row (get-row index)]
     (case index
-      12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0]
+      12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0.1]
       19 [(- (* column boxSize) 0.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0) -8) 0 0 0 0.19]
       [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
@@ -144,10 +145,11 @@
   (translate
    [(- boxSize 19.2) -11 0]
    (union
-    (translate [-10 13 -0.6] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [1.9 1.6] 4))))
-    (translate [0 23 (- thickness 1.6 2.9)] (round-cube 8 23 thickness 0.5))
-    (translate [0 25.7 (- thickness 1.6 2.9 0.15)] (round-cube 10 13 8 0.5))
-    (translate [0 0 1.5] (round-cube 18.3 33.3 1.8 0.3))
+    (translate [-10 13.5 -0.85] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [1.6 1.55] 4))))
+    (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
+    (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
+    (translate [0 25.8 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 13 8 0.5))
+    (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
     (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
     (translate [0 -0.25 -1.2] (cube 16.2 30.5 (- thickness 1.57))))))
 
@@ -155,6 +157,11 @@
   (translate
    [(- boxSize 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
+
+(def mainboard-hull
+  (hull
+   switch-shells
+   controller-holder))
 
 (defn get-keyboard [orientation]
   (def switch-holder-cutout
@@ -175,9 +182,7 @@
   (mirror
    [(if (= orientation :left) 1 0) 0 0]
    (difference
-    (hull
-     switch-shells
-     controller-holder)
+    mainboard-hull
     (union
      controller-holder-cutout
      switch-cutouts
@@ -202,6 +207,9 @@
       (translate [0 -0.4 0.8] (cube 0.5 20 (- z 0.6)))
       (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
+(defn get-case [orientation] mainboard-hull)
+
+(spit "case-right.scad" (write-scad (get-case :right)))
 (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
 (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
 (spit "tool.scad" (write-scad tool))
