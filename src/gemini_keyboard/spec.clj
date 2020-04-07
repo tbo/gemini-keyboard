@@ -18,8 +18,8 @@
 (fs! 120)
 (def rows 5)
 (def columns 7)
-(def switch-count (-  (* rows columns) 2))
-;; (def switch-count 2)
+;; (def switch-count (-  (* rows columns) 2))
+(def switch-count 2)
 
 (def diode-holder
   (let
@@ -145,13 +145,19 @@
   (translate
    [(- boxSize 19.2) -11 0]
    (union
-    (translate [-10 13.5 -0.85] (rotate [0 (/ Math/PI 2) 0] (binding [*fn* 32] (cylinder [1.6 1.55] 4))))
+    (translate [-10 13.5 -0.85]
+               (rotate
+                [0 (/ Math/PI 2) 0]
+                (binding [*fn* 32]
+                  (union
+                   (cylinder [1.6 1.55] 4)
+                   (translate [0 0 -3.99] (cylinder 1.6 4))))))
     (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
     (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-    (translate [0 25.8 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 13 8 0.5))
+    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 13 8 0.5))
     (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
     (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
-    (translate [0 -0.25 -1.2] (cube 16.2 30.5 (- thickness 1.57))))))
+    (translate [0 -0.25 -0.687] (cube 16.2 30.5 (- thickness 1.57))))))
 
 (def controller-holder
   (translate
@@ -207,7 +213,15 @@
       (translate [0 -0.4 0.8] (cube 0.5 20 (- z 0.6)))
       (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
-(defn get-case [orientation] mainboard-hull)
+(defn get-case [orientation]
+  (let [c 2]
+    (difference
+     (minkowski (translate [0 0 0] (cube c c c)) mainboard-hull)
+     (translate
+      [0 0 (+ (/ c 2) 0.01)]
+      (union
+       (minkowski (cube 0.1 0.1 0.1) mainboard-hull)
+       controller-holder-cutout)))))
 
 (spit "case-right.scad" (write-scad (get-case :right)))
 (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
