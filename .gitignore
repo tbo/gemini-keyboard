@@ -17,3 +17,4 @@ pom.xml.asc
 gemini-keyboard.iml
 *.stl
 *.scad
+*.gcode

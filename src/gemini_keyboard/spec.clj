@@ -18,8 +18,8 @@
 (fs! 120)
 (def rows 5)
 (def columns 7)
-;; (def switch-count (-  (* rows columns) 2))
-(def switch-count 2)
+(def switch-count (-  (* rows columns) 2))
+;; (def switch-count 2)
 
 (def diode-holder
   (let
@@ -74,10 +74,10 @@
 
 (defn get-column [index]
   (condp contains? index
-    #{12 19} 0
-    #{0 6 13 20} 1
-    #{1 7 14 21} 2
-    #{2 8 15 22 29 26 27 28} 3
+    #{12 26} 0
+    #{0 6 13 20 19} 1
+    #{1 7 14 21 27 28} 2
+    #{2 8 15 22 29} 3
     #{3 9 16 23 30 31 32} 4
     #{4 10 17 24 31} 5
     6))
@@ -91,7 +91,7 @@
         row (get-row index)]
     (case index
       12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0.1]
-      19 [(- (* column boxSize) 0.8) (+ (* row (- boxSize 0.5) -1) (get offset column 0) -8) 0 0 0 0.19]
+      26 [(+ (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
       [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
 
 (def switch-positions (map get-position (range switch-count)))
@@ -121,10 +121,11 @@
       result)))
 
 (def horizontal-connectors
-  (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
-       (cart
-        (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
-        horizontal-matches)))
+  (filter #(not= (first %) [26 2])
+          (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
+               (cart
+                (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
+                horizontal-matches))))
 
 (def connector-base-offset (+ (/ thickness -2) 2.2))
 
@@ -150,11 +151,11 @@
                 [0 (/ Math/PI 2) 0]
                 (binding [*fn* 32]
                   (union
-                   (cylinder [1.6 1.55] 4)
+                   (cylinder [1.6 1.53] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
     (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
     (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 13 8 0.5))
+    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
     (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
     (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
     (translate [0 -0.25 -0.687] (cube 16.2 30.5 (- thickness 1.57))))))
@@ -202,6 +203,7 @@
      (get-connectors vertical-connectors)
      (get-connectors horizontal-connectors)))))
 
+(println horizontal-connectors)
 (def tool
   (let
    [z 2.6]
@@ -214,16 +216,20 @@
       (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
 (defn get-case [orientation]
-  (let [c 2]
-    (difference
-     (minkowski (translate [0 0 0] (cube c c c)) mainboard-hull)
-     (translate
-      [0 0 (+ (/ c 2) 0.01)]
-      (union
-       (minkowski (cube 0.1 0.1 0.1) mainboard-hull)
-       controller-holder-cutout)))))
+  (let [c 2
+        mainboard (scale [1 1 1.2] mainboard-hull)]
+    (mirror
+     [(if (= orientation :left) 1 0) 0 0]
+     (difference
+      (minkowski (translate [0 0 0] (cube c c c)) mainboard)
+      (translate
+       [0 0 (+ (/ c 2) 0.01)]
+       (union
+        (minkowski (cube 0.1 0.1 0.1) mainboard)
+        controller-holder-cutout))))))
 
 (spit "case-right.scad" (write-scad (get-case :right)))
+(spit "case-left.scad" (write-scad (get-case :left)))
 (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
 (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
 (spit "tool.scad" (write-scad tool))
