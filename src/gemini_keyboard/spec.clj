@@ -1,12 +1,18 @@
 (ns gemini-keyboard.spec
   (:refer-clojure :exclude [use import])
-  (:require [scad-clj.scad :refer :all]
-            [scad-clj.model :refer :all]))
+  (:require [scad-clj.scad :refer [write-scad]]
+            [scad-clj.model :refer
+             [fs! *fn* hull circle cube cylinder difference extrude-rotate translate minkowski mirror rotate scale sphere union]]))
 
-(def switch-min-width 13.78)
+(def switch-min-width 13.81)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
+(def boxSize (+ switch-min-width (* spacing 2) 0.05))
+(fs! 120)
+(def rows 5)
+(def columns 7)
+(def switch-count (-  (* rows columns) 2))
 
 (defn fuzzy-cube [x y z offset]
   (hull
@@ -14,12 +20,6 @@
    (cube (- x offset) (- y offset) z)))
 
 (def latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
-(def boxSize (+ switch-min-width (* spacing 2) 0.05))
-(fs! 120)
-(def rows 5)
-(def columns 7)
-(def switch-count (-  (* rows columns) 2))
-;; (def switch-count 2)
 
 (def diode-holder
   (let
@@ -101,7 +101,7 @@
 (def switch-shells (get-switch-group switch-shell))
 
 (def connector-end
-  (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1))))
+  (scale [1 1 0.9] (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1)))))
 
 (defn get-connector [start end]
   (hull
@@ -171,39 +171,36 @@
    controller-holder))
 
 (defn get-keyboard [orientation]
-  (def switch-holder-cutout
-    (union
+  (let [switch-holder-cutout
+        (union
+         (difference
+          (union
+           (cube switch-min-width switch-min-width thickness)
+           (hull
+            (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
+            (translate [0 0 (/ thickness -2)] (cube (+ switch-min-width 2.1) (+ switch-min-width 2.1) 0.001))))
+
+          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 0] diode-holder)))
+         (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
+         (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
+
+    (mirror
+     [(if (= orientation :left) 1 0) 0 0]
      (difference
+      mainboard-hull
       (union
-       (cube switch-min-width switch-min-width thickness)
-       (hull
-        (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-        (translate [0 0 (/ thickness -2)] (cube (+ switch-min-width 2.7) (+ switch-min-width 2.7) 0.001))))
+       controller-holder-cutout
+       (get-switch-group switch-holder-cutout)
+       (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
+       (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
+       (get-connector (get-juncture [6 7]) [1.5 -17  connector-base-offset])
+       (get-connector (get-juncture [6 6]) [1.5 -19  connector-base-offset])
+       (get-connector (get-juncture [12 0]) [-6 -20  connector-base-offset])
+       (get-connector (get-juncture [12 1]) [0 -20  connector-base-offset])
+       (get-connector [4 -34 connector-base-offset] [5 -20 connector-base-offset])
+       (get-connectors vertical-connectors)
+       (get-connectors horizontal-connectors))))))
 
-      (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 0] diode-holder)))
-     (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
-     (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch)))
-
-  (def switch-cutouts (get-switch-group switch-holder-cutout))
-
-  (mirror
-   [(if (= orientation :left) 1 0) 0 0]
-   (difference
-    mainboard-hull
-    (union
-     controller-holder-cutout
-     switch-cutouts
-     (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
-     (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
-     (get-connector (get-juncture [6 7]) [1.5 -17  connector-base-offset])
-     (get-connector (get-juncture [6 6]) [1.5 -19  connector-base-offset])
-     (get-connector (get-juncture [12 0]) [-6 -20  connector-base-offset])
-     (get-connector (get-juncture [12 1]) [0 -20  connector-base-offset])
-     (get-connector [4 -34 connector-base-offset] [5 -20 connector-base-offset])
-     (get-connectors vertical-connectors)
-     (get-connectors horizontal-connectors)))))
-
-(println horizontal-connectors)
 (def tool
   (let
    [z 2.6]
@@ -216,17 +213,29 @@
       (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
 
 (defn get-case [orientation]
-  (let [c 2
+  (let [b 3
+        c 2
         mainboard (scale [1 1 1.2] mainboard-hull)]
     (mirror
      [(if (= orientation :left) 1 0) 0 0]
      (difference
-      (minkowski (translate [0 0 0] (cube c c c)) mainboard)
+      (minkowski (translate [0 0 0] (cube b b c)) mainboard)
       (translate
        [0 0 (+ (/ c 2) 0.01)]
        (union
         (minkowski (cube 0.1 0.1 0.1) mainboard)
         controller-holder-cutout))))))
+
+;; (def body
+;;   (let [a 5.8
+;;         b (/ 13.5 2)]
+;;     (hull
+;;      (cube 26.5 a 8)
+;;      (translate [0 (- 18.5 (/ a 2) b) 0] (cylinder b 8)))))
+;;
+;; (defn get-helper []
+;;   (difference (minkowski (cube 1.6 1.6 1.6) (translate [0 0 -0.81] body)) body))
+;; (spit "helper.scad" (write-scad (get-helper)))
 
 (spit "case-right.scad" (write-scad (get-case :right)))
 (spit "case-left.scad" (write-scad (get-case :left)))
@@ -234,4 +243,3 @@
 (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
 (spit "tool.scad" (write-scad tool))
 (spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5)))))))
-

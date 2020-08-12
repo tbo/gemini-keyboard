@@ -18,3 +18,4 @@ gemini-keyboard.iml
 *.stl
 *.scad
 *.gcode
+.clj-kondo
