@@ -1,7 +1,8 @@
 (ns gemini-keyboard.core
-  (:use [gemini-keyboard.spec]))
+  (:require [gemini-keyboard.spec :refer [write-models]]))
 
 (defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (printf "Generated scad file"))
+  "Generates keyboard models"
+  []
+  (write-models)
+  (printf "Generated keyboard models"))

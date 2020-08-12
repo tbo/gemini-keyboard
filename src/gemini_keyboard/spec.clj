@@ -1,5 +1,4 @@
 (ns gemini-keyboard.spec
-  (:refer-clojure :exclude [use import])
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
              [fs! *fn* hull circle cube cylinder difference extrude-rotate translate minkowski mirror rotate scale sphere union]]))
@@ -226,20 +225,10 @@
         (minkowski (cube 0.1 0.1 0.1) mainboard)
         controller-holder-cutout))))))
 
-;; (def body
-;;   (let [a 5.8
-;;         b (/ 13.5 2)]
-;;     (hull
-;;      (cube 26.5 a 8)
-;;      (translate [0 (- 18.5 (/ a 2) b) 0] (cylinder b 8)))))
-;;
-;; (defn get-helper []
-;;   (difference (minkowski (cube 1.6 1.6 1.6) (translate [0 0 -0.81] body)) body))
-;; (spit "helper.scad" (write-scad (get-helper)))
-
-(spit "case-right.scad" (write-scad (get-case :right)))
-(spit "case-left.scad" (write-scad (get-case :left)))
-(spit "gemini-right.scad" (write-scad (get-keyboard :right)))
-(spit "gemini-left.scad" (write-scad (get-keyboard :left)))
-(spit "tool.scad" (write-scad tool))
-(spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5)))))))
+(defn write-models []
+  (spit "case-right.scad" (write-scad (get-case :right)))
+  (spit "case-left.scad" (write-scad (get-case :left)))
+  (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
+  (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
+  (spit "tool.scad" (write-scad tool))
+  (spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5))))))))
