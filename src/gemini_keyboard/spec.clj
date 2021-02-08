@@ -204,7 +204,7 @@
   (let
    [z 2.6]
     (union
-     (translate [0.8 3.9 1] (binding [*fn* 15] (cylinder [0.8 0.6] 4)))
+     (translate [0.8 3.9 1] (binding [*fn* 64] (cylinder [0.8 0.6] 2.8)))
      (difference
       (fuzzy-cube 12 9.2 z 0.6)
       (translate [0 -0.9 0.6] (cube 1.9 4.0 (- z 0.6)))
