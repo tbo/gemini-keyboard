@@ -97,12 +97,34 @@
 (def home-row 2)
 
 (def vertical-inclination 0.04)
-(defn get-inclination [row] (* (- home-row row) vertical-inclination))
 
-(defn get-z-offset [row]
-  (let [current-offset (* box-size 0.5 (sin (abs (get-inclination row))))
-        previous-offset (if (= row home-row) 0.0 (get-z-offset (+ row (if (> row home-row) -1 1))))]
-    (+ current-offset (* previous-offset 2))))
+(defn get-vertival-inclination [row] (* (- home-row row) vertical-inclination))
+
+(defn get-horizontal-inclination [column]
+  (condp contains? column
+    #{6} 0
+    #{1} 0.09
+    0.06))
+
+(defn get-inclination-height [angle] (* box-size 0.5 (sin (abs angle))))
+
+;;   (max (get-z-horizontal-offset column) (get-z-vertical-offset row)))
+(defn get-z-offset [row column]
+  (let [current-vertical-offset (get-inclination-height (get-vertival-inclination row))
+        previous-row (+ row (if (> row home-row) -1 1))
+        previous-vertical-offset (if (= row home-row)
+                                   0.0
+                                   (+ (get-z-offset previous-row column) (get-inclination-height
+                                                                          (get-vertival-inclination previous-row))))
+        vertical-offset (+ current-vertical-offset previous-vertical-offset)
+        current-horizontal-offset (get-inclination-height (get-horizontal-inclination column))
+        previous-column (inc column)
+        previous-horizontal-offset (if (= column (dec columns))
+                                     0.0
+                                     (+ (get-z-offset row previous-column) (get-inclination-height
+                                                                            (get-horizontal-inclination previous-column))))
+        horizontal-offset (+ current-horizontal-offset previous-horizontal-offset)]
+    (max vertical-offset horizontal-offset)))
 
 (defn get-position [index]
   (let [offset [-4 -1 1 4.5 3.5 -5 -5.5]
@@ -113,7 +135,13 @@
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0)) 0 0 0 0.1]
         26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
-        [(* column box-size) (+ (* row (- box-size 0.5) -1) (get offset column 0)) (get-z-offset row) (get-inclination row) 0 0]))))
+        [(* column box-size)
+         (+ (* row (- box-size 0.5) -1)
+            (get offset column 0))
+         (get-z-offset row column)
+         (get-vertival-inclination row)
+         (get-horizontal-inclination column)
+         0]))))
 
 (def switch-positions (filter some? (map get-position (range switch-count))))
 
