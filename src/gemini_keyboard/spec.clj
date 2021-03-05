@@ -1,9 +1,9 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! *fn* hull circle cube cylinder difference extrude-rotate translate minkowski mirror rotate scale sphere union]]))
+             [fs! fn! fa! *fn* hull circle cube cylinder difference extrude-rotate translate minkowski mirror rotate scale sphere union]]))
 
-(def switch-min-width 13.81)
+(def switch-min-width 13.89)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
@@ -11,7 +11,8 @@
 (fs! 120)
 (def rows 5)
 (def columns 7)
-(def switch-count (-  (* rows columns) 2))
+(def switch-count (-  (* rows columns) 4))
+(def dev false)
 
 (defn fuzzy-cube [x y z offset]
   (hull
@@ -27,9 +28,15 @@
      [0 0 (+ (/ thickness -2) (/ z 2))]
      (difference
       (fuzzy-cube 7 5.5 z 0.6)
-      (translate [-0.4 0 0] (binding [*fn* 12] (cylinder 1.2 (+ z 0.01))))
+      (translate [-0.4 0 0] (binding [*fn* (if dev 1 12)] (cylinder 1.2 (+ z 0.01))))
       (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
+
+;; (def latch ())
+;; (def diode-holder ())
+;; (fs! 1)
+;; (fn! 1)
+;; (fa! 1)
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -39,7 +46,7 @@
              (list ~@syms)))))
 
 (defn round-cube [x y z radius]
-  (let [corner (binding [*fn* 8] (sphere radius))
+  (let [corner (binding [*fn* (if dev 1 8)] (sphere radius))
         dimensions (map #(- (/ % 2) radius) [x y z])]
     (hull
      (map
@@ -120,7 +127,7 @@
       result)))
 
 (def horizontal-connectors
-  (filter #(not= (first %) [26 2])
+  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 2] [19 2] [19 3]]))
           (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
                (cart
                 (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
@@ -148,7 +155,7 @@
     (translate [-10 13.5 -0.85]
                (rotate
                 [0 (/ Math/PI 2) 0]
-                (binding [*fn* 32]
+                (binding [*fn* (if dev 1 32)]
                   (union
                    (cylinder [1.6 1.53] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
@@ -196,6 +203,8 @@
        (get-connector (get-juncture [6 6]) [1.5 -19  connector-base-offset])
        (get-connector (get-juncture [12 0]) [-6 -20  connector-base-offset])
        (get-connector (get-juncture [12 1]) [0 -20  connector-base-offset])
+       (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
+       (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
        (get-connector [4 -34 connector-base-offset] [5 -20 connector-base-offset])
        (get-connectors vertical-connectors)
        (get-connectors horizontal-connectors))))))
