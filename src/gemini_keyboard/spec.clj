@@ -103,12 +103,12 @@
 (defn get-horizontal-inclination [column]
   (condp contains? column
     #{6} 0
+    #{2} 0.07
     #{1} 0.09
     0.06))
 
 (defn get-inclination-height [angle] (* box-size 0.5 (sin (abs angle))))
 
-;;   (max (get-z-horizontal-offset column) (get-z-vertical-offset row)))
 (defn get-z-offset [row column]
   (let [current-vertical-offset (get-inclination-height (get-vertival-inclination row))
         previous-row (+ row (if (> row home-row) -1 1))
@@ -128,6 +128,7 @@
 
 (defn get-position [index]
   (let [offset [-4 -1 1 4.5 3.5 -5 -5.5]
+        z-offset-correction [0 0 0 -1.5 -0.5 0 0]
         column (get-column index)
         row (get-row index)]
     (if (or (nil? row) (nil? column))
@@ -138,7 +139,7 @@
         [(* column box-size)
          (+ (* row (- box-size 0.5) -1)
             (get offset column 0))
-         (get-z-offset row column)
+         (+ (get-z-offset row column) (get z-offset-correction column))
          (get-vertival-inclination row)
          (get-horizontal-inclination column)
          0]))))
