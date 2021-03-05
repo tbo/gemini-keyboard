@@ -187,9 +187,9 @@
               offsetsY [-4.5 6]
               baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
               baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
-              baseZ connector-base-offset
+              baseZ (+ z connector-base-offset)
               [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
-          [(+ a x) (+ b y) (- c z)]))))
+          [(+ a x) (+ b y) c]))))
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
