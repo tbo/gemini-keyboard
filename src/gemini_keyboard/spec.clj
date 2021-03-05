@@ -32,11 +32,11 @@
       (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
 
-;; (def latch ())
-;; (def diode-holder ())
-;; (fs! 1)
-;; (fn! 1)
-;; (fa! 1)
+(def latch ())
+(def diode-holder ())
+(fs! 1)
+(fn! 1)
+(fa! 1)
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -75,18 +75,20 @@
     #{0 1 2 3 4 5} 0
     #{6 7 8 9 10 11} 1
     #{12 13 14 15 16 17 18} 2
-    #{19 20 21 22 23 24 25} 3
-    4))
+    #{20 21 22 23 24 25} 3
+    #{26 27 28 29 30 31 32} 4
+    nil))
 
 (defn get-column [index]
   (condp contains? index
     #{12 26} 0
-    #{0 6 13 20 19} 1
+    #{0 6 13 20} 1
     #{1 7 14 21 27 28} 2
     #{2 8 15 22 29} 3
     #{3 9 16 23 30 31 32} 4
     #{4 10 17 24 31} 5
-    6))
+    #{5 11 18 25} 6
+    nil))
 
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
@@ -95,12 +97,14 @@
   (let [offset [-4 -1 1 4.5 3.5 -5 -5.5]
         column (get-column index)
         row (get-row index)]
-    (case index
-      12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0.1]
-      26 [(+ (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
-      [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0])))
+    (if (or (nil? row) (nil? column))
+      nil
+      (case index
+        12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0.1]
+        26 [(+ (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
+        [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0]))))
 
-(def switch-positions (map get-position (range switch-count)))
+(def switch-positions (filter some? (map get-position (range switch-count))))
 
 (defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
@@ -127,7 +131,7 @@
       result)))
 
 (def horizontal-connectors
-  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 2] [19 2] [19 3]]))
+  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 2]]))
           (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
                (cart
                 (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
@@ -136,15 +140,17 @@
 (def connector-base-offset (+ (/ thickness -2) 2.2))
 
 (defn get-juncture [[index connector-id]]
-  (let [[x y z rx ry rz] (get-position index)
-        base (/ switch-min-width 2)
-        offsetsX [-6 0]
-        offsetsY [-4.5 6]
-        baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
-        baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
-        baseZ connector-base-offset
-        [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
-    [(+ a x) (+ b y) (- c z)]))
+  (let [position (get-position index)]
+    (if (nil? position) nil
+        (let [[x y z rx ry rz] position
+              base (/ switch-min-width 2)
+              offsetsX [-6 0]
+              offsetsY [-4.5 6]
+              baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
+              baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
+              baseZ connector-base-offset
+              [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
+          [(+ a x) (+ b y) (- c z)]))))
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
