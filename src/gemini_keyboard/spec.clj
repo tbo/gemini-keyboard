@@ -7,7 +7,7 @@
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
-(def boxSize (+ switch-min-width (* spacing 2) 0.05))
+(def box-size (+ switch-min-width (* spacing 2) 0.05))
 (fs! 120)
 (def rows 5)
 (def columns 7)
@@ -55,6 +55,7 @@
 
 (defn cos [v] (Math/cos v))
 (defn sin [v] (Math/sin v))
+(defn abs [v] (Math/abs v))
 
 (defn rotate-point [px py pz rx ry rz]
   (let [Axx (* (cos rz) (cos ry))
@@ -93,6 +94,16 @@
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
 
+(def home-row 2)
+
+(def vertical-inclination 0.04)
+(defn get-inclination [row] (* (- home-row row) vertical-inclination))
+
+(defn get-z-offset [row]
+  (let [current-offset (* box-size 0.5 (sin (abs (get-inclination row))))
+        previous-offset (if (= row home-row) 0.0 (get-z-offset (+ row (if (> row home-row) -1 1))))]
+    (+ current-offset (* previous-offset 2))))
+
 (defn get-position [index]
   (let [offset [-4 -1 1 4.5 3.5 -5 -5.5]
         column (get-column index)
@@ -100,9 +111,9 @@
     (if (or (nil? row) (nil? column))
       nil
       (case index
-        12 [(- (* column boxSize) 1) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0.1]
-        26 [(+ (* column boxSize) 1.0) (+ (* row (- boxSize 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
-        [(* column boxSize) (+ (* row (- boxSize 0.5) -1) (get offset column 0)) 0 0 0 0]))))
+        12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0)) 0 0 0 0.1]
+        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
+        [(* column box-size) (+ (* row (- box-size 0.5) -1) (get offset column 0)) (get-z-offset row) (get-inclination row) 0 0]))))
 
 (def switch-positions (filter some? (map get-position (range switch-count))))
 
@@ -156,7 +167,7 @@
 
 (def controller-holder-cutout
   (translate
-   [(- boxSize 19.2) -11 0]
+   [(- box-size 19.2) -11 0]
    (union
     (translate [-10 13.5 -0.85]
                (rotate
@@ -174,11 +185,11 @@
 
 (def controller-holder
   (translate
-   [(- boxSize 19.2) -11 0]
+   [(- box-size 19.2) -11 0]
    (round-cube 23 37 thickness 1.3)))
 
 (def mainboard-hull
-  (hull
+  (union
    switch-shells
    controller-holder))
 
