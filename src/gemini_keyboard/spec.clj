@@ -153,7 +153,16 @@
 
 (defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
+(defn get-switch-hull [form [x y z a b c]]
+  (let [scaled-form (scale [1.2 1.2 1] form)]
+    (hull
+     (translate [x y 0] (rotate [0 0 c] scaled-form))
+     (translate [x y z] (rotate [a b c] scaled-form)))))
+
+(defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
+
 (def switch-shells (get-switch-group switch-shell))
+(def switch-hulls (get-switch-hull-group switch-shell))
 
 (def connector-end
   (scale [1 1 0.9] (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1)))))
@@ -226,7 +235,7 @@
 
 (def mainboard-hull
   (hull
-   switch-shells
+   switch-hulls
    controller-holder))
 
 (defn get-keyboard [orientation]
@@ -300,4 +309,5 @@
   (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
   (spit "hull.scad" (write-scad mainboard-hull))
   (spit "tool.scad" (write-scad tool))
+  (spit "switch-shells.scad" (write-scad switch-shells))
   (spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5))))))))
