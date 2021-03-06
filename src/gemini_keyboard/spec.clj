@@ -137,7 +137,8 @@
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0)) (get (get-position 6)
                                                                                                  2) 0.03 0 0 0.1]
-        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
+        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5)
+            (get-inclination-height 0.1) 0 -0.1 0.19]
         [(* column box-size)
          (+ (* row (- box-size 0.5) -1)
             (get offset column 0))
@@ -202,7 +203,7 @@
   (translate
    [(- box-size 19.4) -11 controller-height]
    (union
-    (translate [-10 13.5 -0.85]
+    (translate [-10 13.5 -5.5]
                (rotate
                 [0 (/ Math/PI 2) 0]
                 (binding [*fn* (if dev 1 32)]
@@ -213,13 +214,13 @@
     (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
     (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
     (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
-    (translate [0 0.35 3.0] (cube 18.1 32.9 1.6))
-    (translate [0 -0.25 -0.687] (cube 16.2 30.5 (- thickness 1.57))))))
+    (translate [0 0.35 7.5] (cube 18.1 32.9 10.6))
+    (translate [0 -0.25 -0.687] (cube 16.2 30.5 100)))))
 
 (def controller-holder
   (translate
-   [(- box-size 19.4) -11 controller-height]
-   (round-cube 23 37 thickness 1.3)))
+   [(- box-size 19.4) -11 (/ thickness 2)]
+   (round-cube 23 37 (+ thickness controller-height) 1.3)))
 
 (def controller-connector-z (- controller-height 4))
 
