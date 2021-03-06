@@ -1,7 +1,8 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! fn! fa! *fn* hull circle cube cylinder difference extrude-rotate translate minkowski mirror rotate scale sphere union]]))
+             [fs! fn! fa! *fn* hull circle cube cylinder difference extrude-rotate extrude-linear translate minkowski
+              mirror rotate scale sphere union]]))
 
 (def switch-min-width 13.89)
 (def switch-max-width 15.5)
@@ -134,7 +135,8 @@
     (if (or (nil? row) (nil? column))
       nil
       (case index
-        12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0)) 0 0 0 0.1]
+        12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0)) (get (get-position 6)
+                                                                                                 2) 0.03 0 0 0.1]
         26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5) 0 0 0 0.19]
         [(* column box-size)
          (+ (* row (- box-size 0.5) -1)
@@ -143,6 +145,8 @@
          (get-vertival-inclination row)
          (get-horizontal-inclination column)
          0]))))
+
+(def controller-height (let [[_ _ z] (get-position 6)] z))
 
 (def switch-positions (filter some? (map get-position (range switch-count))))
 
@@ -196,7 +200,7 @@
 
 (def controller-holder-cutout
   (translate
-   [(- box-size 19.2) -11 0]
+   [(- box-size 19.4) -11 controller-height]
    (union
     (translate [-10 13.5 -0.85]
                (rotate
@@ -214,11 +218,13 @@
 
 (def controller-holder
   (translate
-   [(- box-size 19.2) -11 0]
+   [(- box-size 19.4) -11 controller-height]
    (round-cube 23 37 thickness 1.3)))
 
+(def controller-connector-z (- controller-height 4))
+
 (def mainboard-hull
-  (union
+  (hull
    switch-shells
    controller-holder))
 
@@ -239,19 +245,22 @@
     (mirror
      [(if (= orientation :left) 1 0) 0 0]
      (difference
-      mainboard-hull
+      (union
+       switch-shells
+       mainboard-hull
+       controller-holder)
       (union
        controller-holder-cutout
        (get-switch-group switch-holder-cutout)
-       (get-connector (get-juncture [0 7]) [1.5 -3 connector-base-offset])
-       (get-connector (get-juncture [0 6]) [1.5 -10  connector-base-offset])
-       (get-connector (get-juncture [6 7]) [1.5 -17  connector-base-offset])
-       (get-connector (get-juncture [6 6]) [1.5 -19  connector-base-offset])
-       (get-connector (get-juncture [12 0]) [-6 -20  connector-base-offset])
-       (get-connector (get-juncture [12 1]) [0 -20  connector-base-offset])
+       (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
+       (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
+       (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
+       (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
+       (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
+       (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
        (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
        (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
-       (get-connector [4 -34 connector-base-offset] [5 -20 connector-base-offset])
+       (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
        (get-connectors vertical-connectors)
        (get-connectors horizontal-connectors))))))
 
@@ -285,5 +294,6 @@
   (spit "case-left.scad" (write-scad (get-case :left)))
   (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
   (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
+  (spit "hull.scad" (write-scad mainboard-hull))
   (spit "tool.scad" (write-scad tool))
   (spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5))))))))
