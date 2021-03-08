@@ -250,7 +250,8 @@
            (cube switch-min-width switch-min-width thickness)
            (hull
             (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-            (translate [0 0 (- (/ thickness -2) 10)] (cube (+ switch-min-width 6) (+ switch-min-width 6) 0.001))))
+            (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
+           (translate [0 0 -52.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 100)))
 
           (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 0] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
