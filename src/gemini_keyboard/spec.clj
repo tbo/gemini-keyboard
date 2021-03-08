@@ -227,7 +227,7 @@
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
             (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
             (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
-    (translate [0 -0.25 -0.687] (cube 16.2 30.5 100)))))
+    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -9.3] (cube 9 7 5)))))))
 
 (def controller-holder
   (translate
