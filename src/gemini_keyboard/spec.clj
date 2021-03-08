@@ -4,7 +4,7 @@
              [fs! fn! fa! *fn* hull circle cube cylinder difference extrude-rotate extrude-linear translate minkowski
               mirror rotate scale sphere union]]))
 
-(def switch-min-width 13.89)
+(def switch-min-width 13.88)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
