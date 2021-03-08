@@ -24,17 +24,19 @@
 
 (def diode-holder
   (let
-   [z 20.8]
+   [z 2.8]
     (translate
      [0 0 (+ (/ thickness -2) (/ z 2))]
-     (difference
-      (fuzzy-cube 7 5.5 z 0.6)
-      (translate [-0.4 0 0] (binding [*fn* (if dev 1 12)] (cylinder 1.2 (+ z 0.01))))
-      (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
-      (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
+     (union
+      (difference
+       (fuzzy-cube 7 5.5 z 0.6)
+       (translate [-0.4 0 0] (binding [*fn* (if dev 1 12)] (cylinder 1.2 (+ z 0.01))))
+       (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
+       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))
+      (translate [0 0 (/ z -2)] (hull (cube 5.8 4.3 0.01) (translate [-3.5 0 -10] (cube 0.1 0.1 0.1))))))))
 
 (def latch ())
-(def diode-holder ())
+;; (def diode-holder ())
 (fs! 1)
 (fn! 1)
 (fa! 1)
