@@ -24,7 +24,7 @@
 
 (def diode-holder
   (let
-   [z 2.8]
+   [z 20.8]
     (translate
      [0 0 (+ (/ thickness -2) (/ z 2))]
      (difference
@@ -108,7 +108,7 @@
     #{1} 0.09
     0.06))
 
-(defn get-inclination-height [angle] (* box-size 0.5 (sin (abs angle))))
+(defn get-inclination-height [angle] (* shell-corner-offset 0.5 (sin (abs angle))))
 
 (defn get-z-offset [row column]
   (let [current-vertical-offset (get-inclination-height (get-vertival-inclination row))
@@ -210,7 +210,7 @@
 
 (def controller-holder-cutout
   (translate
-   [(- box-size 19.4) -11 controller-height]
+   [(- box-size 19.4) -11 (+ controller-height 1)]
    (union
     (translate [-10 13.5 -5.5]
                (rotate
@@ -219,17 +219,18 @@
                   (union
                    (cylinder [1.6 1.53] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
-    (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
-    (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
-    (translate [0 0.35 7.5] (cube 18.1 32.9 10.6))
+    (rotate [0 -0.1 0]
+            (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
+            (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
+            (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
+            (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
+            (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
     (translate [0 -0.25 -0.687] (cube 16.2 30.5 100)))))
 
 (def controller-holder
   (translate
-   [(- box-size 19.4) -11 (/ thickness 2)]
-   (round-cube 23 37 (+ thickness controller-height) 1.3)))
+   [(- box-size 19.4) -11 (/ controller-height 2)]
+   (round-cube 23 37 (+ thickness controller-height) 1.5)))
 
 (def controller-connector-z (- controller-height 4))
 
@@ -255,27 +256,28 @@
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
 
-    (mirror
-     [(if (= orientation :left) 1 0) 0 0]
-     (difference
-      (union
-       switch-shells
-       mainboard-hull
-       controller-holder)
-      (union
-       controller-holder-cutout
-       (get-switch-group switch-holder-cutout)
-       (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
-       (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
-       (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
-       (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
-       (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
-       (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
-       (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
-       (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
-       (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
-       (get-connectors vertical-connectors)
-       (get-connectors horizontal-connectors))))))
+    (translate [0 0 (/ thickness 2)]
+               (mirror
+                [(if (= orientation :left) 1 0) 0 0]
+                (difference
+                 (union
+                  switch-shells
+                  mainboard-hull
+                  controller-holder)
+                 (union
+                  controller-holder-cutout
+                  (get-switch-group switch-holder-cutout)
+                  (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
+                  (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
+                  (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
+                  (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
+                  (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
+                  (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
+                  (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
+                  (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
+                  (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
+                  (get-connectors vertical-connectors)
+                  (get-connectors horizontal-connectors)))))))
 
 (def tool
   (let
