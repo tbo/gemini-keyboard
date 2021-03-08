@@ -219,7 +219,7 @@
                   (union
                    (cylinder [1.6 1.53] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (rotate [0 -0.1 0]
+    (rotate [0 -0.18 0]
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
