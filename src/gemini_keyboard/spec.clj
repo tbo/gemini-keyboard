@@ -1,7 +1,7 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! fn! fa! *fn* hull circle cube cylinder difference extrude-rotate extrude-linear translate minkowski
+             [fs! fn! fa! *fn* hull cube cylinder difference extrude-linear translate minkowski
               mirror rotate scale sphere union]]))
 
 (def switch-min-width 13.88)
@@ -35,11 +35,11 @@
        (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))
       (translate [0 0 (/ z -2)] (hull (cube 6.4 4.9 0.01) (translate [-3.5 0 -10] (cube 0.1 0.1 0.1))))))))
 
-(def latch ())
-(def diode-holder ())
-(fs! 1)
-(fn! 1)
-(fa! 1)
+;; (def latch ())
+;; (def diode-holder ())
+;; (fs! 1)
+;; (fn! 1)
+;; (fa! 1)
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -237,9 +237,16 @@
 (def controller-connector-z (- controller-height 4))
 
 (def mainboard-hull
-  (hull
-   switch-hulls
-   controller-holder))
+  (union
+   (hull
+    switch-hulls
+    controller-holder)
+   (hull
+    (get-switch-hull switch-shell (get-position 25))
+    (get-switch-hull switch-shell (get-position 26))
+    (get-switch-hull switch-shell (get-position 28))
+    (translate [0 -96 0] (get-switch-hull switch-shell (get-position 25)))
+    (translate [0 -83 0] (get-switch-hull switch-shell (get-position 28))))))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
@@ -253,7 +260,7 @@
            (hull
             (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
             (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
-           (translate [0 0 -52.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 100)))
+           (translate [0 0 -12.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 20)))
 
           (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 0] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
@@ -312,7 +319,4 @@
   (spit "case-left.scad" (write-scad (get-case :left)))
   (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
   (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
-  (spit "hull.scad" (write-scad mainboard-hull))
-  (spit "tool.scad" (write-scad tool))
-  (spit "switch-shells.scad" (write-scad switch-shells))
-  (spit "palm-rest.scad" (write-scad (binding [*fn* 15] (union (translate [10 0 0] (sphere 1.5)) (extrude-rotate {:angle 360} (translate [2 0 0] (circle 1.5))))))))
+  (spit "tool.scad" (write-scad tool)))
