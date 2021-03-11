@@ -99,7 +99,7 @@
 
 (def home-row 2)
 
-(def vertical-inclination 0.06)
+(def vertical-inclination 0.09)
 
 (defn get-vertival-inclination [row] (* (- home-row row) vertical-inclination))
 
@@ -107,7 +107,7 @@
   (condp contains? column
     #{6} 0
     #{2} 0.10
-    #{1} 0.12
+    #{1} 0.14
     0.075))
 
 (defn get-inclination-height [angle] (* shell-corner-offset 0.5 (sin (abs angle))))
@@ -140,7 +140,7 @@
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0) 0.3) (get (get-position 6)
                                                                                                      2) 0.03 0 0.05 0.1]
         26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5)
-            (+ (get-inclination-height 0.1) 1) 0 -0.1 0.19]
+            (+ (get-inclination-height 0.1) 4) 0 -0.1 0.19]
         [(* column box-size)
          (+ (* row (- box-size 0.5) -1)
             (get offset column 0))
@@ -156,10 +156,9 @@
 (defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
 (defn get-switch-hull [form [x y z a b c]]
-  (let [scaled-form (scale [1.2 1.2 1] form)]
-    (hull
-     (translate [x y 0] (rotate [0 0 c] scaled-form))
-     (translate [x y z] (rotate [a b c] scaled-form)))))
+  (hull
+   (translate [x y 0] (scale [1.23 1.23 1] (rotate [0 0 c] form)))
+   (translate [x y z] (scale [1.23 1.23 1] (rotate [a b c] form)))))
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
@@ -206,28 +205,28 @@
               baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
               baseZ (+ z connector-base-offset)
               [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
-          [(+ a x) (+ b y) c]))))
+          [(+ a x) (+ b y) (- c 0.4)]))))
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
 (def controller-holder-cutout
   (translate
-   [(- box-size 19.4) -11 (+ controller-height 1)]
+   [(- box-size 19.4) -11 (+ controller-height 2)]
    (union
-    (translate [-10 13.5 -5.5]
+    (translate [-10 13.5 -6.5]
                (rotate
                 [0 (/ Math/PI 2) 0]
                 (binding [*fn* (if dev 1 32)]
                   (union
-                   (cylinder [1.6 1.53] 4)
+                   (cylinder [1.6 1.55] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (rotate [0 -0.18 0]
+    (rotate [0 -0.19 0]
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
             (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
             (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
-    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -9.3] (cube 9 7 5)))))))
+    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -10.3] (cube 9 7 7)))))))
 
 (def controller-holder
   (translate
@@ -243,10 +242,14 @@
     controller-holder)
    (hull
     (get-switch-hull switch-shell (get-position 25))
+    (translate [0 0 2] (get-switch-hull switch-shell (get-position 25)))
     (get-switch-hull switch-shell (get-position 26))
     (get-switch-hull switch-shell (get-position 28))
-    (translate [0 -96 0] (get-switch-hull switch-shell (get-position 25)))
-    (translate [0 -83 0] (get-switch-hull switch-shell (get-position 28))))))
+    (translate [0 0 2] (get-switch-hull switch-shell (get-position 28)))
+    (translate [-10 -93 0] (get-switch-hull switch-shell (get-position 25)))
+    (translate [-10 -93 2] (get-switch-hull switch-shell (get-position 25)))
+    (translate [0 -83 0] (get-switch-hull switch-shell (get-position 29)))
+    (translate [0 -83 2] (get-switch-hull switch-shell (get-position 29))))))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
