@@ -1,8 +1,8 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! fn! fa! *fn* hull cube cylinder difference extrude-linear translate minkowski
-              mirror rotate scale sphere union]]))
+             [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
+              mirror rotate scale sphere union circle]]))
 
 (def switch-min-width 13.88)
 (def switch-max-width 15.5)
@@ -235,21 +235,43 @@
 
 (def controller-connector-z (- controller-height 4))
 
+;; (def wrist-rest-base (round-cube 106.5 60 thickness 1.5))
+
+(def wrist-rest-base (translate [0 0 (/ (- 8 thickness) 2)] (round-cube 45 80 8 1.5)))
+
+(def wrist-rest
+  (let [t1 1.5
+        r 10
+        x (- 50 r t1)
+        -x (* x -1)
+        y (- 24 r t1)
+        -y (* y -1)
+        t2 4
+        z (- 11.1 t2)
+        b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
+        c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
+    (translate [0 0 (+ (/ thickness -2) 1.5)]
+               (hull
+                (translate [-x -y 0] b)
+                (translate [(- -x 10) (+  y 10) 0] b)
+                (translate [x -y 0] b)
+                (translate [x y 0] b)
+                (translate [-x -y (+ z 4)] c)
+                (translate [(- -x 10) (+  y 10) (/ thickness 2)] b)
+                (translate [-x 0 (+ z 4)] c)
+                (translate [-y y (+ z 2.3)] c)
+                (translate [x -y (- z 2.5)] c)
+                (translate [x y (- z 2.5)] c)))))
+
 (def mainboard-hull
   (union
+
+   ;; (translate [65 -88 0] wrist-rest-base)
+   (translate [70 -110 0] wrist-rest-base)
    (hull
     switch-hulls
     controller-holder)
-   (hull
-    (get-switch-hull switch-shell (get-position 25))
-    (translate [0 0 2] (get-switch-hull switch-shell (get-position 25)))
-    (get-switch-hull switch-shell (get-position 26))
-    (get-switch-hull switch-shell (get-position 28))
-    (translate [0 0 2] (get-switch-hull switch-shell (get-position 28)))
-    (translate [-10 -93 0] (get-switch-hull switch-shell (get-position 25)))
-    (translate [-10 -93 2] (get-switch-hull switch-shell (get-position 25)))
-    (translate [0 -83 0] (get-switch-hull switch-shell (get-position 29)))
-    (translate [0 -83 2] (get-switch-hull switch-shell (get-position 29))))))
+   (translate [70 -133 0] wrist-rest)))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
