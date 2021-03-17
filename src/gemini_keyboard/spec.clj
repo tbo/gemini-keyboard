@@ -213,7 +213,7 @@
   (translate
    [(- box-size 19.4) -11 (+ controller-height 2)]
    (union
-    (translate [-10 13.5 -6.5]
+    (translate [-10 13.5 -7.5]
                (rotate
                 [0 (/ Math/PI 2) 0]
                 (binding [*fn* (if dev 1 32)]
@@ -223,10 +223,10 @@
     (rotate [0 -0.19 0]
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-            (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
+            (translate [0 25.68 (- thickness 1.6 2.9 1)] (round-cube 11.5 18 11 0.5))
             (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
             (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
-    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -10.3] (cube 9 7 7)))))))
+    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -10.3] (cube 9 7 7.2)))))))
 
 (def controller-holder
   (translate
@@ -241,15 +241,15 @@
     switch-hulls
     controller-holder)
    (hull
+    (translate [62 -100 17] (scale [1.2 1.2 0.4] (sphere 10)))
     (get-switch-hull switch-shell (get-position 25))
     (translate [0 0 2] (get-switch-hull switch-shell (get-position 25)))
     (get-switch-hull switch-shell (get-position 26))
-    (get-switch-hull switch-shell (get-position 28))
+    (translate [0 0 0] (get-switch-hull switch-shell (get-position 28)))
     (translate [0 0 2] (get-switch-hull switch-shell (get-position 28)))
     (translate [-10 -93 0] (get-switch-hull switch-shell (get-position 25)))
     (translate [-10 -93 2] (get-switch-hull switch-shell (get-position 25)))
-    (translate [0 -83 0] (get-switch-hull switch-shell (get-position 29)))
-    (translate [0 -83 2] (get-switch-hull switch-shell (get-position 29))))))
+    (translate [25 -83 0] (get-switch-hull switch-shell (get-position 29))))))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
