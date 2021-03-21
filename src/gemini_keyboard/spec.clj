@@ -87,7 +87,7 @@
   (condp contains? index
     #{12 26} 0
     #{0 6 13 20} 1
-    #{1 7 14 21 27 28} 2
+    #{1 7 14 21 28} 2
     #{2 8 15 22 29} 3
     #{3 9 16 23 30 31 32} 4
     #{4 10 17 24 31} 5
@@ -169,9 +169,10 @@
   (scale [1 1 0.9] (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1)))))
 
 (defn get-connector [start end]
-  (hull
-   (translate start connector-end)
-   (translate end connector-end)))
+  (if (some nil? [start end]) nil
+      (hull
+       (translate start connector-end)
+       (translate end connector-end))))
 
 (def horizontal-matches [[2 7] [3 6]])
 
@@ -186,7 +187,7 @@
       result)))
 
 (def horizontal-connectors
-  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 2]]))
+  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 3]]))
           (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
                (cart
                 (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
@@ -200,7 +201,7 @@
         (let [[x y z rx ry rz] position
               base (/ switch-min-width 2)
               offsetsX [-6 0]
-              offsetsY [-4.5 6]
+              offsetsY [-6 6]
               baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
               baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
               baseZ (+ z connector-base-offset)
@@ -235,10 +236,6 @@
 
 (def controller-connector-z (- controller-height 4))
 
-;; (def wrist-rest-base (round-cube 106.5 60 thickness 1.5))
-
-(def wrist-rest-base (translate [0 0 (/ (- 8 thickness) 2)] (round-cube 45 80 8 1.5)))
-
 (def wrist-rest
   (let [t1 1.5
         r 10
@@ -247,27 +244,23 @@
         y (- 24 r t1)
         -y (* y -1)
         t2 4
-        z (- 11.1 t2)
+        z (- 12.1 t2)
         b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
         c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
     (translate [0 0 (+ (/ thickness -2) 1.5)]
                (hull
                 (translate [-x -y 0] b)
-                (translate [(- -x 10) (+  y 10) 0] b)
+                (translate [(- -x 5) (+  y 30) 0] b)
                 (translate [x -y 0] b)
-                (translate [x y 0] b)
+                (translate [x (+ y 35) 0] b)
                 (translate [-x -y (+ z 4)] c)
-                (translate [(- -x 10) (+  y 10) (/ thickness 2)] b)
-                (translate [-x 0 (+ z 4)] c)
-                (translate [-y y (+ z 2.3)] c)
+                (translate [(- -x 5) (+  y 30) (/ thickness 2)] b)
+                (translate [(+ -x 15) 40 (+ z (* (/ 6.5 2 x) (- (* 2 x) 15)) -2.5)] c)
                 (translate [x -y (- z 2.5)] c)
-                (translate [x y (- z 2.5)] c)))))
+                (translate [x (+ y 35) (- z 2.5)] c)))))
 
 (def mainboard-hull
   (union
-
-   ;; (translate [65 -88 0] wrist-rest-base)
-   (translate [70 -110 0] wrist-rest-base)
    (hull
     switch-hulls
     controller-holder)
@@ -309,6 +302,7 @@
                   (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
                   (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
                   (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
+                  (get-connector (get-juncture [28 6]) (get-juncture [26 3]))
                   (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
                   (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
                   (get-connectors vertical-connectors)
