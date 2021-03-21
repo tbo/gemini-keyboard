@@ -20,7 +20,7 @@
    (cube x y (- z offset))
    (cube (- x offset) (- y offset) z)))
 
-(def latch (hull (fuzzy-cube switch-max-width 4.9 0.8 0.7)))
+(def latch (hull (fuzzy-cube (- switch-max-width 0.6) 4.9 0.8 0.7)))
 
 (def diode-holder
   (let
@@ -243,19 +243,19 @@
         -x (* x -1)
         y (- 24 r t1)
         -y (* y -1)
-        t2 4
+        t2 5
         z (- 12.1 t2)
         b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
         c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
     (translate [0 0 (+ (/ thickness -2) 1.5)]
                (hull
                 (translate [-x -y 0] b)
-                (translate [(- -x 5) (+  y 30) 0] b)
+                (translate [(+ -x 10) (+  y 30) 0] b)
                 (translate [x -y 0] b)
                 (translate [x (+ y 35) 0] b)
                 (translate [-x -y (+ z 4)] c)
-                (translate [(- -x 5) (+  y 30) (/ thickness 2)] b)
-                (translate [(+ -x 15) 40 (+ z (* (/ 6.5 2 x) (- (* 2 x) 15)) -2.5)] c)
+                (translate [(+ -x 10) (+  y 30) (+ (/ thickness 2) 5)] b)
+                (translate [(+ -x 18) 40 (+ z (* (/ 6.5 2 x) (- (* 2 x) 18)) -2.5)] c)
                 (translate [x -y (- z 2.5)] c)
                 (translate [x (+ y 35) (- z 2.5)] c)))))
 
