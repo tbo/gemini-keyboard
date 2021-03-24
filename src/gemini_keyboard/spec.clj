@@ -99,13 +99,13 @@
 
 (def home-row 2)
 
-(def vertical-inclination 0.09)
+(def vertical-inclination 0.12)
 
 (defn get-vertival-inclination [row] (* (- home-row row) vertical-inclination))
 
 (defn get-horizontal-inclination [column]
   (condp contains? column
-    #{6} 0
+    #{6} -0.05
     #{2} 0.10
     #{1} 0.14
     0.075))
@@ -140,7 +140,7 @@
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0) 0.3) (get (get-position 6)
                                                                                                      2) 0.03 0 0.05 0.1]
         26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5)
-            (+ (get-inclination-height 0.1) 4) 0 -0.1 0.19]
+            (+ (get-inclination-height 0.1) 4) 0.05 -0.13 0.20]
         [(* column box-size)
          (+ (* row (- box-size 0.5) -1)
             (get offset column 0))
@@ -157,8 +157,8 @@
 
 (defn get-switch-hull [form [x y z a b c]]
   (hull
-   (translate [x y 0] (scale [1.23 1.23 1] (rotate [0 0 c] form)))
-   (translate [x y z] (scale [1.23 1.23 1] (rotate [a b c] form)))))
+   (translate [x y 0] (scale [1.23 1.4 1] (rotate [0 0 c] form)))
+   (translate [x y z] (scale [1.23 1.2 1] (rotate [a b c] form)))))
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
@@ -212,7 +212,7 @@
 
 (def controller-holder-cutout
   (translate
-   [(- box-size 19.4) -11 (+ controller-height 2)]
+   [(- box-size 19.4) -11 (+ controller-height 2.5)]
    (union
     (translate [-10 13.5 -6.5]
                (rotate
@@ -221,13 +221,13 @@
                   (union
                    (cylinder [1.6 1.55] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (rotate [0 -0.19 0]
+    (rotate [0 -0.21 0]
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
             (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
             (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
-    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 12 -10.3] (cube 9 7 7)))))))
+    (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 13.5 -12.3] (cube 9 7 7)))))))
 
 (def controller-holder
   (translate
@@ -241,10 +241,10 @@
         r 10
         x (- 50 r t1)
         -x (* x -1)
-        y (- 24 r t1)
+        y (- 26 r t1)
         -y (* y -1)
         t2 5
-        z (- 12.1 t2)
+        z (- 13.1 t2)
         b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
         c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
     (translate [0 0 (+ (/ thickness -2) 1.5)]
@@ -264,7 +264,7 @@
    (hull
     switch-hulls
     controller-holder)
-   (translate [70 -133 0] wrist-rest)))
+   (translate [70 -135 0] wrist-rest)))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
@@ -280,7 +280,7 @@
             (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
            (translate [0 0 -12.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 20)))
 
-          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 0] diode-holder)))
+          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -1.0] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
 
