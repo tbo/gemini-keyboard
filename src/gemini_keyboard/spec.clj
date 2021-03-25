@@ -130,21 +130,23 @@
     (max vertical-offset horizontal-offset)))
 
 (defn get-position [index]
-  (let [offset [-4 -1 1 4.5 3.5 -4 -5.5]
-        z-offset-correction [0 0 0 -1.5 -0.5 0 0]
+  (let [x-offset [0 0 0 0 0 0 0.8]
+        y-offset [-4 -1 1 4.5 3.5 -4 -5.5]
+        z-base-offset -1
+        z-offset [0 0 0 -1.5 -0.5 0 (* z-base-offset -1)]
         column (get-column index)
         row (get-row index)]
     (if (or (nil? row) (nil? column))
       nil
       (case index
-        12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get offset column 0) 0.3) (get (get-position 6)
-                                                                                                     2) 0.03 0 0.05 0.1]
-        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get offset column 0) 6.5)
-            (+ (get-inclination-height 0.1) 4) 0.05 -0.13 0.20]
-        [(* column box-size)
+        12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 0.3) (get (get-position 6)
+                                                                                                       2) 0.03 0 0.05 0.1]
+        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 6.5)
+            (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.20]
+        [(+ (* column box-size) (get x-offset column 0))
          (+ (* row (- box-size 0.5) -1)
-            (get offset column 0))
-         (+ (get-z-offset row column) (get z-offset-correction column))
+            (get y-offset column 0))
+         (+ (get-z-offset row column) (get z-offset column) z-base-offset)
          (get-vertival-inclination row)
          (get-horizontal-inclination column)
          0]))))
@@ -205,8 +207,8 @@
               baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
               baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
               baseZ (+ z connector-base-offset)
-              [a b c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
-          [(+ a x) (+ b y) (- c 0.4)]))))
+              [_ _ c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
+          [(+ (get baseX connector-id) x) (+ (get baseY connector-id) y) (- c 0.7)]))))
 
 (def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
@@ -221,7 +223,7 @@
                   (union
                    (cylinder [1.6 1.55] 4)
                    (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (rotate [0 -0.21 0]
+    (rotate [0 -0.23 0]
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
@@ -239,12 +241,12 @@
 (def wrist-rest
   (let [t1 1.5
         r 10
-        x (- 50 r t1)
+        x (- 46 r t1)
         -x (* x -1)
-        y (- 26 r t1)
+        y (- 27 r t1)
         -y (* y -1)
         t2 5
-        z (- 13.1 t2)
+        z (- 15.1 t2)
         b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
         c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
     (translate [0 0 (+ (/ thickness -2) 1.5)]
@@ -255,7 +257,7 @@
                 (translate [x (+ y 35) 0] b)
                 (translate [-x -y (+ z 4)] c)
                 (translate [(+ -x 10) (+  y 30) (+ (/ thickness 2) 5)] b)
-                (translate [(+ -x 18) 40 (+ z (* (/ 6.5 2 x) (- (* 2 x) 18)) -2.5)] c)
+                (translate [(+ -x 22) 40 (+ z (* (/ 6.5 2 x) (- (* 2 x) 22)) -2.5)] c)
                 (translate [x -y (- z 2.5)] c)
                 (translate [x (+ y 35) (- z 2.5)] c)))))
 
@@ -264,7 +266,7 @@
    (hull
     switch-hulls
     controller-holder)
-   (translate [70 -135 0] wrist-rest)))
+   (translate [74 -137 0] wrist-rest)))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
@@ -280,7 +282,7 @@
             (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
            (translate [0 0 -12.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 20)))
 
-          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -1.0] diode-holder)))
+          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.7] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
 
