@@ -130,8 +130,8 @@
     (max vertical-offset horizontal-offset)))
 
 (defn get-position [index]
-  (let [x-offset [0 0 0 0 0 0 0.8]
-        y-offset [-4 -1 1 4.5 3.5 -4 -5.5]
+  (let [x-offset [0 0 0 0 0 0 0.7]
+        y-offset [-4 -1 1 4.5 2.0 -4 -5.5]
         z-base-offset -1
         z-offset [0 0 0 -1.5 -0.5 0 (* z-base-offset -1)]
         column (get-column index)
@@ -227,7 +227,7 @@
             (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
             (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
             (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
-            (translate [0 -0.1 1.5] (round-cube 18.3 33.2 1.8 0.3))
+            (translate [0 -0.2 1.5] (round-cube 18.3 33.1 1.8 0.3))
             (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
     (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 13.5 -12.3] (cube 9 7 7)))))))
 
@@ -241,11 +241,11 @@
 (def wrist-rest
   (let [t1 1.5
         r 10
-        x (- 46 r t1)
+        x (- 48 r t1)
         -x (* x -1)
         y (- 27 r t1)
         -y (* y -1)
-        t2 5
+        t2 4
         z (- 15.1 t2)
         b (extrude-rotate {:angle 360} (translate [(- r t1) 0 0] (circle t1)))
         c (rotate [0 0.1 0] (binding [*fn* 32] (extrude-rotate {:angle 360} (translate [(- r t2) 0 0] (circle t2)))))]
@@ -266,7 +266,7 @@
    (hull
     switch-hulls
     controller-holder)
-   (translate [74 -137 0] wrist-rest)))
+   (translate [75 -137 0] wrist-rest)))
 
 (defn get-keyboard [orientation]
   (let [cap-height 40
@@ -282,7 +282,7 @@
             (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
            (translate [0 0 -12.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 20)))
 
-          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.7] diode-holder)))
+          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
 
