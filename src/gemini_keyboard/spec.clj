@@ -86,7 +86,7 @@
 (defn get-column [index]
   (condp contains? index
     #{12 26} 0
-    #{0 6 13 20} 1
+    #{0 6 13 20 27} 1
     #{1 7 14 21 28} 2
     #{2 8 15 22 29} 3
     #{3 9 16 23 30 31 32} 4
@@ -141,8 +141,15 @@
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 0.3) (get (get-position 6)
                                                                                                        2) 0.03 0 0.05 0.1]
-        26 [(+ (* column box-size) 1.0) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 6.5)
-            (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.20]
+        26 [(+ (* column box-size) 1.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 6.5)
+            (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.07]
+        27 [(+ (* column box-size) (get x-offset column 0) 1)
+            (+ (* row (- box-size 0.5) -1)
+               (get y-offset column) 0.5)
+            (+ (get-z-offset row column) (get z-offset column) z-base-offset -3.5)
+            0.05
+            -0.13
+            0.0]
         [(+ (* column box-size) (get x-offset column 0))
          (+ (* row (- box-size 0.5) -1)
             (get y-offset column 0))
@@ -155,12 +162,25 @@
 
 (def switch-positions (filter some? (map get-position (range switch-count))))
 
+(defn get-switch-group-cutout [form orientation position]
+  (let [p #(translate (take 3 position) (rotate (drop 3 position) %))
+        oriented-diode-holder (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] diode-holder))
+        switch
+        (p (difference form oriented-diode-holder))
+        side
+        (p (cube (+ switch-min-width 3.2) (+ switch-min-width 3.2) 0.001))
+        shaft (difference (hull (translate [0 0 -2.5] side) (translate [0 0 -18] side)) (translate [0 0 0]
+                                                                                                   (p oriented-diode-holder)))]
+    (union switch shaft)))
+
+(defn get-switch-group-a [form orientation] (union (map #(get-switch-group-cutout form orientation %) switch-positions)))
+
 (defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
 (defn get-switch-hull [form [x y z a b c]]
   (hull
-   (translate [x y 0] (scale [1.23 1.4 1] (rotate [0 0 c] form)))
-   (translate [x y z] (scale [1.23 1.2 1] (rotate [a b c] form)))))
+   (translate [x y 0] (scale [1.1 1.1 1] (rotate [0 0 c] form)))
+   (translate [x y z] (scale [1.1 1.1 1] (rotate [a b c] form)))))
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
@@ -189,7 +209,7 @@
       result)))
 
 (def horizontal-connectors
-  (filter #(not (some (fn [x] (= (first %) x)) [[26 2] [27 3]]))
+  (filter #(not (some (fn [x] (= (first %) x)) []))
           (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
                (cart
                 (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
@@ -269,7 +289,7 @@
    (translate [75 -137 0] wrist-rest)))
 
 (defn get-keyboard [orientation]
-  (let [cap-height 40
+  (let [cap-height 15
         cap-offset (+ (/ thickness 2) (/ cap-height 2) -1.01)
         switch-holder-cutout
         (union
@@ -279,10 +299,8 @@
            (cube switch-min-width switch-min-width thickness)
            (hull
             (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-            (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))
-           (translate [0 0 -12.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 20)))
+            (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))))
 
-          (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] diode-holder)))
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
 
@@ -296,15 +314,13 @@
                   controller-holder)
                  (union
                   controller-holder-cutout
-                  (get-switch-group switch-holder-cutout)
+                  (get-switch-group-a switch-holder-cutout orientation)
                   (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
                   (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
                   (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
                   (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
                   (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
                   (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
-                  (get-connector (get-juncture [28 7]) (get-juncture [26 3]))
-                  (get-connector (get-juncture [28 6]) (get-juncture [26 3]))
                   (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
                   (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
                   (get-connectors vertical-connectors)
