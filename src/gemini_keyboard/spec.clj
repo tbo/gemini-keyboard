@@ -32,14 +32,14 @@
        (fuzzy-cube 7 5.5 z 0.6)
        (translate [-0.4 0 0] (binding [*fn* (if dev 1 12)] (cylinder 1.2 (+ z 0.01))))
        (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
-       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))
-      (translate [0 0 (/ z -2)] (hull (cube 6.4 4.9 0.01) (translate [-3.5 0 -10] (cube 0.1 0.1 0.1))))))))
+       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))))))
 
 ;; (def latch ())
 ;; (def diode-holder ())
 ;; (fs! 1)
 ;; (fn! 1)
 ;; (fa! 1)
+
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -141,11 +141,11 @@
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 0.3) (get (get-position 6)
                                                                                                        2) 0.03 0 0.05 0.1]
-        26 [(+ (* column box-size) 1.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 6.5)
+        26 [(+ (* column box-size) 2.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 5.7)
             (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.07]
-        27 [(+ (* column box-size) (get x-offset column 0) 1)
+        27 [(+ (* column box-size) (get x-offset column 0) 2.0)
             (+ (* row (- box-size 0.5) -1)
-               (get y-offset column) 0.5)
+               (get y-offset column) 1.9)
             (+ (get-z-offset row column) (get z-offset column) z-base-offset -3.5)
             0.05
             -0.13
@@ -164,13 +164,16 @@
 
 (defn get-switch-group-cutout [form orientation position]
   (let [p #(translate (take 3 position) (rotate (drop 3 position) %))
-        oriented-diode-holder (mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] diode-holder))
+        orient #(mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] %))
+        oriented-diode-holder  (orient diode-holder)
+        support (translate [0 0 -1.0] (hull
+                                       (p (orient (cube 8 5.8 0.1)))
+                                       (translate (take 3 position) (translate [(if (= orientation :left) 3 -3) 0 -9] (orient (cube 0.1 0.1 0.1))))))
         switch
         (p (difference form oriented-diode-holder))
         side
-        (p (cube (+ switch-min-width 3.2) (+ switch-min-width 3.2) 0.001))
-        shaft (difference (hull (translate [0 0 -2.5] side) (translate [0 0 -18] side)) (translate [0 0 0]
-                                                                                                   (p oriented-diode-holder)))]
+        (p (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001))
+        shaft (difference (hull (translate [0 0 -2.5] side) (translate [0 0 -18] side)) support)]
     (union switch shaft)))
 
 (defn get-switch-group-a [form orientation] (union (map #(get-switch-group-cutout form orientation %) switch-positions)))
@@ -299,7 +302,7 @@
            (cube switch-min-width switch-min-width thickness)
            (hull
             (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-            (translate [0 0 -2.5] (cube (+ switch-min-width 3.3) (+ switch-min-width 3.3) 0.001)))))
+            (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001)))))
 
          (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
          (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
