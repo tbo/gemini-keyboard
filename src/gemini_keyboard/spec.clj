@@ -4,7 +4,7 @@
              [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
               mirror rotate scale sphere union circle]]))
 
-(def switch-min-width 13.88)
+(def switch-min-width 13.75)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
@@ -141,11 +141,11 @@
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 0.3) (get (get-position 6)
                                                                                                        2) 0.03 0 0.05 0.1]
-        26 [(+ (* column box-size) 2.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 5.7)
+        26 [(+ (* column box-size) 2.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 4.9)
             (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.07]
         27 [(+ (* column box-size) (get x-offset column 0) 2.0)
             (+ (* row (- box-size 0.5) -1)
-               (get y-offset column) 1.9)
+               (get y-offset column) 2.0)
             (+ (get-z-offset row column) (get z-offset column) z-base-offset -3.5)
             0.05
             -0.13
@@ -291,43 +291,47 @@
     controller-holder)
    (translate [75 -137 0] wrist-rest)))
 
-(defn get-keyboard [orientation]
+(def switch-holder-cutout
   (let [cap-height 15
-        cap-offset (+ (/ thickness 2) (/ cap-height 2) -1.01)
-        switch-holder-cutout
-        (union
-         (difference
-          (union
-           (translate [0 0 cap-offset] (round-cube (+ box-size 0.6) (+ box-size 0.6) cap-height 1))
-           (cube switch-min-width switch-min-width thickness)
-           (hull
-            (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-            (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001)))))
+        cap-offset (+ (/ thickness 2) (/ cap-height 2) -1.01)]
+    (union
+     (difference
+      (union
+       (translate [0 0 cap-offset] (round-cube (+ box-size 0.6) (+ box-size 0.6) cap-height 1))
+       (cube switch-min-width switch-min-width thickness)
+       (hull
+        (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
+        (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001)))))
 
-         (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 1.8)] latch)
-         (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 1.8)] latch))]
+     (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 2.64)] latch)
+     (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 2.64)] latch))))
 
-    (translate [0 0 (/ thickness 2)]
-               (mirror
-                [(if (= orientation :left) 1 0) 0 0]
-                (difference
-                 (union
-                  switch-shells
-                  mainboard-hull
-                  controller-holder)
-                 (union
-                  controller-holder-cutout
-                  (get-switch-group-a switch-holder-cutout orientation)
-                  (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
-                  (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
-                  (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
-                  (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
-                  (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
-                  (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
-                  (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
-                  (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
-                  (get-connectors vertical-connectors)
-                  (get-connectors horizontal-connectors)))))))
+(defn get-keyboard [orientation]
+  (translate
+   [0 0 (/ thickness 2)]
+   (mirror
+    [(if (= orientation :left) 1 0) 0 0]
+    (difference
+     (union
+      switch-shells
+      mainboard-hull
+      controller-holder)
+     (union
+      controller-holder-cutout
+      (get-switch-group-a switch-holder-cutout orientation)
+      (get-connector (get-juncture [0 7]) [1.5 -3 controller-connector-z])
+      (get-connector (get-juncture [0 6]) [1.5 -10  controller-connector-z])
+      (get-connector (get-juncture [6 7]) [1.5 -17  controller-connector-z])
+      (get-connector (get-juncture [6 6]) [1.5 -19  controller-connector-z])
+      (get-connector (get-juncture [12 0]) [-6 -20  controller-connector-z])
+      (get-connector (get-juncture [12 1]) [0 -20  controller-connector-z])
+      (get-connector (get-juncture [20 7]) (get-juncture [12 3]))
+      (get-connector [4 -34 controller-connector-z] [5 -20 controller-connector-z])
+      (get-connectors vertical-connectors)
+      (get-connectors horizontal-connectors))))))
+
+(defn get-demo-switch []
+  (difference switch-shell switch-holder-cutout))
 
 (def tool
   (let
@@ -359,4 +363,5 @@
   (spit "case-left.scad" (write-scad (get-case :left)))
   (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
   (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
+  (spit "demo-switch.scad" (write-scad (get-demo-switch)))
   (spit "tool.scad" (write-scad tool)))
