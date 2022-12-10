@@ -2,7 +2,7 @@
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
              [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
-              mirror rotate scale sphere union circle]]))
+              mirror rotate scale sphere union circle render]]))
 
 (def switch-min-width 13.75)
 (def switch-max-width 15.5)
@@ -13,7 +13,6 @@
 (def rows 5)
 (def columns 7)
 (def switch-count (-  (* rows columns) 4))
-(def dev false)
 
 (defn fuzzy-cube [x y z offset]
   (hull
@@ -34,12 +33,12 @@
        (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
        (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))))))
 
-;; (def latch ())
-;; (def diode-holder ())
-;; (fs! 1)
-;; (fn! 1)
-;; (fa! 1)
-
+(def dev true)
+(def latch ())
+(def diode-holder ())
+(fs! 1)
+(fn! 1)
+(fa! 1)
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -97,65 +96,35 @@
 (def switch-shell
   (round-cube shell-corner-offset shell-corner-offset thickness 1.5))
 
-(def home-row 2)
-
-(def vertical-inclination 0.12)
-
-(defn get-vertival-inclination [row] (* (- home-row row) vertical-inclination))
-
-(defn get-horizontal-inclination [column]
-  (condp contains? column
-    #{6} -0.05
-    #{2} 0.10
-    #{1} 0.14
-    0.075))
-
-(defn get-inclination-height [angle] (* shell-corner-offset 0.5 (sin (abs angle))))
-
-(defn get-z-offset [row column]
-  (let [current-vertical-offset (get-inclination-height (get-vertival-inclination row))
-        previous-row (+ row (if (> row home-row) -1 1))
-        previous-vertical-offset (if (= row home-row)
-                                   0.0
-                                   (+ (get-z-offset previous-row column) (get-inclination-height
-                                                                          (get-vertival-inclination previous-row))))
-        vertical-offset (+ current-vertical-offset previous-vertical-offset)
-        current-horizontal-offset (get-inclination-height (get-horizontal-inclination column))
-        previous-column (inc column)
-        previous-horizontal-offset (if (= column (dec columns))
-                                     0.0
-                                     (+ (get-z-offset row previous-column) (get-inclination-height
-                                                                            (get-horizontal-inclination previous-column))))
-        horizontal-offset (+ current-horizontal-offset previous-horizontal-offset)]
-    (max vertical-offset horizontal-offset)))
-
 (defn get-position [index]
   (let [x-offset [0 0 0 0 0 0 0.7]
         y-offset [-4 -1 1 4.5 2.0 -4 -5.5]
         z-base-offset -1
-        z-offset [0 0 0 -1.5 -0.5 0 (* z-base-offset -1)]
+        z-offset [0 0 0 0 0 0 0]
         column (get-column index)
         row (get-row index)]
     (if (or (nil? row) (nil? column))
       nil
       (case index
         12 [(- (* column box-size) 1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 0.3) (get (get-position 6)
-                                                                                                       2) 0.03 0 0.05 0.1]
+                                                                                                       2) 0 0 0]
         26 [(+ (* column box-size) 2.1) (+ (* row (- box-size 0.5) -1) (get y-offset column 0) 4.9)
-            (+ (get-inclination-height 0.1) 6) 0.05 -0.13 0.07]
+            0 0 0 0]
         27 [(+ (* column box-size) (get x-offset column 0) 2.0)
             (+ (* row (- box-size 0.5) -1)
                (get y-offset column) 2.0)
-            (+ (get-z-offset row column) (get z-offset column) z-base-offset -3.5)
-            0.05
-            -0.13
-            0.0]
+            z-base-offset
+            0
+            0
+            0]
         [(+ (* column box-size) (get x-offset column 0))
          (+ (* row (- box-size 0.5) -1)
             (get y-offset column 0))
-         (+ (get-z-offset row column) (get z-offset column) z-base-offset)
-         (get-vertival-inclination row)
-         (get-horizontal-inclination column)
+         z-base-offset
+         ; (get-vertival-inclination row)
+         0
+         ; (get-horizontal-inclination column)
+         0
          0]))))
 
 (def controller-height (let [[_ _ z] (get-position 6)] z))
@@ -187,8 +156,8 @@
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
-(def switch-shells (get-switch-group switch-shell))
-(def switch-hulls (get-switch-hull-group switch-shell))
+(def switch-shells (render (get-switch-group switch-shell)))
+(def switch-hulls (render (get-switch-hull-group switch-shell)))
 
 (def connector-end
   (scale [1 1 0.9] (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1)))))
@@ -240,18 +209,15 @@
    [(- box-size 19.4) -11 (+ controller-height 2.5)]
    (union
     (translate [-10 13.5 -6.5]
-               (rotate
-                [0 (/ Math/PI 2) 0]
-                (binding [*fn* (if dev 1 32)]
-                  (union
-                   (cylinder [1.6 1.55] 4)
-                   (translate [0 0 -3.99] (cylinder 1.6 4))))))
-    (rotate [0 -0.23 0]
-            (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
-            (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-            (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
-            (translate [0 -0.2 1.5] (round-cube 18.3 33.1 1.8 0.3))
-            (translate [0 0.35 7.5] (cube 18.1 32.9 10.6)))
+               (binding [*fn* (if dev 1 32)]
+                 (union
+                  (cylinder [1.6 1.55] 4)
+                  (translate [0 0 -3.99] (cylinder 1.6 4)))))
+    (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
+    (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
+    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
+    (translate [0 -0.2 1.5] (round-cube 18.3 33.1 1.8 0.3))
+    (translate [0 0.35 7.5] (cube 18.1 32.9 10.6))
     (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 13.5 -12.3] (cube 9 7 7)))))))
 
 (def controller-holder
@@ -289,7 +255,8 @@
    (hull
     switch-hulls
     controller-holder)
-   (translate [75 -137 0] wrist-rest)))
+   ;(translate [75 -137 0] wrist-rest)
+   ))
 
 (def switch-holder-cutout
   (let [cap-height 15
