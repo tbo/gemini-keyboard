@@ -2,9 +2,10 @@
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
              [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
-              mirror rotate scale sphere union circle render]]))
+              mirror rotate scale sphere union circle render extrude-linear polygon]]))
 
-(def switch-min-width 13.75)
+(def dev false)
+(def switch-min-width 14.00)
 (def switch-max-width 15.5)
 (def spacing 2.25)
 (def thickness 5.5)
@@ -19,8 +20,6 @@
    (cube x y (- z offset))
    (cube (- x offset) (- y offset) z)))
 
-(def latch (hull (fuzzy-cube (- switch-max-width 0.6) 4.9 0.8 0.7)))
-
 (def diode-holder
   (let
    [z 2.8]
@@ -29,16 +28,22 @@
      (union
       (difference
        (fuzzy-cube 7 5.5 z 0.6)
-       (translate [-0.4 0 0] (binding [*fn* (if dev 1 12)] (cylinder 1.2 (+ z 0.01))))
        (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
        (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))))))
 
-(def dev true)
-(def latch ())
-(def diode-holder ())
-(fs! 1)
-(fn! 1)
-(fa! 1)
+(defn new-diode-holder [z]
+  (translate
+   [0 0 (+ (/ thickness -2) (/ z 2))]
+   (union
+    (difference
+     (fuzzy-cube 6 5.5 z 0.6)
+     (translate [1.1 0 0.61] (cube 1.9 4.0 (- z 0.6)))
+     (translate [1.1 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
+; (def latch ())
+; (def diode-holder ())
+; (fs! 1)
+; (fn! 1)
+; (fa! 1)
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -268,10 +273,7 @@
        (cube switch-min-width switch-min-width thickness)
        (hull
         (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-        (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001)))))
-
-     (translate [0 (- (/ switch-min-width 2) 3.4) (- (/ thickness 2) 2.64)] latch)
-     (translate [0 (+ (/ switch-min-width -2) 3.4) (- (/ thickness 2) 2.64)] latch))))
+        (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001))))))))
 
 (defn get-keyboard [orientation]
   (translate
@@ -297,8 +299,40 @@
       (get-connectors vertical-connectors)
       (get-connectors horizontal-connectors))))))
 
+; (defn get-demo-switch []
+;   (difference switch-shell switch-holder-cutout))
+
+(defn socket-cube [x y z radius]
+  (let [corner (binding [*fn* (if dev 1 32)] (cylinder radius z))
+        dimensions (map #(- (/ % 2) radius) [x y])]
+    (hull
+     (map
+      #(translate (mapv * % dimensions) corner)
+      (apply cart (repeat 2 [1 -1]))))))
+
+(defn get-switch-socket []
+  (let [iw 13.65
+        ew 15.00
+        ww (+ iw 5.0)
+        tw 20
+        radius 0.5
+        ty 2.3
+        by (- 6.6 ty)]
+    (union
+     ; (translate [(/ iw -2) 0  (+ (/ by -2) 0.5)] (new-diode-holder 4))
+     (difference
+      (union
+       (translate [0 0 (/ ty 2)] (socket-cube ew ew ty radius))
+       (translate [0 0 (/ (- by 2) -2.4)] (socket-cube tw tw by radius)))
+      (translate [0 0 (/ ty 2)] (socket-cube iw iw (+ ty 0.01) radius))
+      (translate [(+ (/ iw -2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
+      (cube 10 (+ iw 0.5) 0.8)
+      (hull
+       (socket-cube (- iw 2) iw 0.01 radius)
+       (translate [0 0 (+ (* by -1) 0.5)] (socket-cube ww ww 0.01 radius)))))))
+
 (defn get-demo-switch []
-  (difference switch-shell switch-holder-cutout))
+  (get-switch-socket))
 
 (def tool
   (let
@@ -310,6 +344,9 @@
       (translate [0 -0.9 0.6] (cube 1.9 4.0 (- z 0.6)))
       (translate [0 -0.4 0.8] (cube 0.5 20 (- z 0.6)))
       (translate [0 3.4 0.8] (fuzzy-cube 30 3 (- z 0.6) 0.6))))))
+
+; (def demo (let [width 13.9]
+;             (rotate [0 (/ Math/PI 2) 0] (extrude-linear {:height width}  (polygon [[0 0] [10 0] [0 10]])))))
 
 (defn get-case [orientation]
   (let [b 3
@@ -331,4 +368,5 @@
   (spit "gemini-right.scad" (write-scad (get-keyboard :right)))
   (spit "gemini-left.scad" (write-scad (get-keyboard :left)))
   (spit "demo-switch.scad" (write-scad (get-demo-switch)))
+  ; (spit "demo-switch.scad" (write-scad demo))
   (spit "tool.scad" (write-scad tool)))
