@@ -20,6 +20,19 @@
    (cube x y (- z offset))
    (cube (- x offset) (- y offset) z)))
 
+(defn cart [& lists]
+  (let [syms (for [_ lists] (gensym))]
+    (eval `(for [~@(mapcat #(list %1 `'~%2) syms lists)]
+             (list ~@syms)))))
+
+(defn round-cube [x y z radius]
+  (let [corner (binding [*fn* (if dev 1 32)] (sphere radius))
+        dimensions (map #(- (/ % 2) radius) [x y z])]
+    (hull
+     (map
+      #(translate (mapv * % dimensions) corner)
+      (apply cart (repeat 3 [1 -1]))))))
+
 (def diode-holder
   (let
    [z 2.8]
@@ -32,13 +45,12 @@
        (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))))))
 
 (defn new-diode-holder [z]
-  (translate
-   [0 0 (+ (/ thickness -2) (/ z 2))]
-   (union
-    (difference
-     (fuzzy-cube 6 5.5 z 0.6)
-     (translate [1.1 0 0.61] (cube 1.9 4.0 (- z 0.6)))
-     (translate [1.1 0 1.6] (cube 0.5 6.1 (- z 0.6)))))))
+  (union
+   (difference
+    (fuzzy-cube 6 8  z 0.5)
+    (translate [0 2 0.61] (cube 4.0 1.9 (- z 0.6)))
+    (translate [0 2 1.6] (cube 6.1 0.5 (- z 0.6))))))
+
 ; (def latch ())
 ; (def diode-holder ())
 ; (fs! 1)
@@ -47,22 +59,8 @@
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
-(defn cart [& lists]
-  (let [syms (for [_ lists] (gensym))]
-    (eval `(for [~@(mapcat #(list %1 `'~%2) syms lists)]
-             (list ~@syms)))))
-
-(defn round-cube [x y z radius]
-  (let [corner (binding [*fn* (if dev 1 8)] (sphere radius))
-        dimensions (map #(- (/ % 2) radius) [x y z])]
-    (hull
-     (map
-      #(translate (mapv * % dimensions) corner)
-      (apply cart (repeat 3 [1 -1]))))))
-
 (defn cos [v] (Math/cos v))
 (defn sin [v] (Math/sin v))
-(defn abs [v] (Math/abs v))
 
 (defn rotate-point [px py pz rx ry rz]
   (let [Axx (* (cos rz) (cos ry))
@@ -317,19 +315,23 @@
         tw 20
         radius 0.5
         ty 2.3
-        by (- 6.6 ty)]
+        b 6.6
+        by (- b ty)]
     (union
-     ; (translate [(/ iw -2) 0  (+ (/ by -2) 0.5)] (new-diode-holder 4))
      (difference
       (union
        (translate [0 0 (/ ty 2)] (socket-cube ew ew ty radius))
        (translate [0 0 (/ (- by 2) -2.4)] (socket-cube tw tw by radius)))
       (translate [0 0 (/ ty 2)] (socket-cube iw iw (+ ty 0.01) radius))
       (translate [(+ (/ iw -2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
-      (cube 10 (+ iw 0.5) 0.8)
-      (hull
-       (socket-cube (- iw 2) iw 0.01 radius)
-       (translate [0 0 (+ (* by -1) 0.5)] (socket-cube ww ww 0.01 radius)))))))
+
+      (translate [0 0 0.25]
+                 (difference (cube 10 (+ iw 0.5) 0.8) (cube 10 (- iw 0.5) 0.8)))
+      (difference
+       (hull
+        (socket-cube (- iw 2) iw 0.01 radius)
+        (translate [0 0 (+ (/ b -2)  0.1)] (socket-cube ww ww 0.01 radius)))
+       (translate [0.5 -7.6 -1.65] (new-diode-holder 3.0)))))))
 
 (defn get-demo-switch []
   (get-switch-socket))
