@@ -42,9 +42,6 @@
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
-(defn cos [v] (Math/cos v))
-(defn sin [v] (Math/sin v))
-
 (defn get-row [index]
   (condp contains? index
     #{0 1 2 3 4 5} 0
@@ -128,8 +125,8 @@
                   (cylinder [1.6 1.55] 4)
                   (translate [0 0 -3.99] (cylinder 1.6 4)))))
     (translate [0 12.4 (- thickness 1.6 3.2)] (round-cube 8 12.4 thickness 0.5))
-    (translate [0 23 (- thickness 1.6 2.8)] (round-cube 7 23 thickness 0.8))
-    (translate [0 25.68 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
+    (translate [0 23 (- thickness 1.6)] (round-cube 7 23 thickness 0.8))
+    (translate [0 26 (- thickness 1.6 2.9 0.15)] (round-cube 11.5 18 8 0.5))
     (translate [0 -0.2 1.5] (round-cube 18.3 33.1 1.8 0.3))
     (translate [0 0.35 7.5] (cube 18.1 32.9 10.6))
     (translate [0 -0.25 -0.687] (difference (cube 16.2 30.5 100) (translate [1 13.5 -12.3] (cube 9 7 7)))))))
@@ -209,17 +206,19 @@
 
 (defn get-keyboard [orientation]
   (let [keys (if (= orientation :left) left right)
+        edge 2
         height (* switch-space (count keys))
         width (* switch-space (apply max (map #(reduce + %) keys)))
-        controller-height 18
+        controller-height 20
         positions (map #(vector (+ (/ (- height switch-space) -2) (first %)) (+ (/ width -2) (second %))) (get-positions keys))
         switches (get-switches positions switch-socket)
         spaces (get-switches positions (cube switch-space switch-space 30))]
     (difference
      (union
       (difference
-       (translate [(/ controller-height 2) 0 (/ (- thickness 2) -2.4) -1] (cube (+  height controller-height) width thickness))
+       (translate [(/ controller-height 2) 0 (/ (- thickness 2) -2.4) -1] (fuzzy-cube (+  height controller-height edge edge) (+ width edge edge) thickness edge))
        spaces)
+      (translate [(+ (/ height 2) (/ controller-height 2) 1) 0 1] (round-cube controller-height  (+ edge width) 3 1))
       switches)
      (get-horizontal-connectors (get-connector (nth positions 0) (nth positions 6)))
      (get-horizontal-connectors (get-connector (nth positions 7) (nth positions 12)))
@@ -251,7 +250,7 @@
      (get-connector (nth positions 12) (nth positions 18))
      (get-connector (nth positions 18) (nth positions 24))
      (get-connector (nth positions 24) (nth positions 30))
-     (translate [(+ (/ height 2) (/ controller-height 2) 0.4) -65.5  -2.8] (mirror [0 1 0] controller-holder-cutout)))))
+     (translate [(+ (/ height 2) (/ controller-height 2) 1.8) -65.5  -1.4] (mirror [0 1 0] controller-holder-cutout)))))
 
 (def tool
   (let
