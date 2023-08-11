@@ -1,14 +1,14 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
-              mirror rotate scale sphere union circle render extrude-linear polygon]]))
+             [fs! *fn* hull cube cylinder difference translate minkowski
+              mirror rotate scale sphere union render]]))
 
 (def dev false)
 (def switch-min-width 14.00)
 (def switch-max-width 15.5)
 (def spacing 2.25)
-(def thickness 5.5)
+(def thickness 4.3)
 (def box-size (+ switch-min-width (* spacing 2) 0.05))
 (fs! 120)
 (def rows 5)
@@ -33,48 +33,17 @@
       #(translate (mapv * % dimensions) corner)
       (apply cart (repeat 3 [1 -1]))))))
 
-(def diode-holder
-  (let
-   [z 2.8]
-    (translate
-     [0 0 (+ (/ thickness -2) (/ z 2))]
-     (union
-      (difference
-       (fuzzy-cube 7 5.5 z 0.6)
-       (translate [1.6 0 0.61] (cube 1.9 4.0 (- z 0.6)))
-       (translate [1.6 0 1.6] (cube 0.5 6.1 (- z 0.6))))))))
-
 (defn new-diode-holder [z]
   (union
    (difference
     (fuzzy-cube 6 8  z 0.5)
-    (translate [0 2 0.61] (cube 4.0 1.9 (- z 0.6)))
-    (translate [0 2 1.6] (cube 6.1 0.5 (- z 0.6))))))
-
-; (def latch ())
-; (def diode-holder ())
-; (fs! 1)
-; (fn! 1)
-; (fa! 1)
+    (translate [0 -2 0.61] (cube 4.0 1.9 (- z 0.6)))
+    (translate [0 -2 1.6] (cube 6.1 0.5 (- z 0.6))))))
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
 (defn cos [v] (Math/cos v))
 (defn sin [v] (Math/sin v))
-
-(defn rotate-point [px py pz rx ry rz]
-  (let [Axx (* (cos rz) (cos ry))
-        Axy (- (* (cos rz) (sin ry) (sin rx)) (* (sin rz) (cos rx)))
-        Axz (+ (* (cos rz) (sin ry) (cos rx)) (* (sin rz) (sin rx)))
-        Ayx (* (sin rz) (cos ry))
-        Ayy (+ (* (sin rz) (sin ry) (sin rx)) (* (cos rz) (cos rx)))
-        Ayz (- (* (sin rz) (sin ry) (cos rx)) (* (cos rz) (sin rx)))
-        Azx (- (sin ry))
-        Azy (* (cos ry) (sin rx))
-        Azz (* (cos ry) (cos rx))]
-    [(+ (* Axx px) (* Axy py) (* Axz pz))
-     (+ (* Ayx px) (* Ayy py) (* Ayz pz))
-     (+ (* Azx px) (* Azy py) (* Azz pz))]))
 
 (defn get-row [index]
   (condp contains? index
@@ -103,7 +72,6 @@
   (let [x-offset [0 0 0 0 0 0 0.7]
         y-offset [-4 -1 1 4.5 2.0 -4 -5.5]
         z-base-offset -1
-        z-offset [0 0 0 0 0 0 0]
         column (get-column index)
         row (get-row index)]
     (if (or (nil? row) (nil? column))
@@ -124,33 +92,13 @@
          (+ (* row (- box-size 0.5) -1)
             (get y-offset column 0))
          z-base-offset
-         ; (get-vertival-inclination row)
          0
-         ; (get-horizontal-inclination column)
          0
          0]))))
 
 (def controller-height (let [[_ _ z] (get-position 6)] z))
 
 (def switch-positions (filter some? (map get-position (range switch-count))))
-
-(defn get-switch-group-cutout [form orientation position]
-  (let [p #(translate (take 3 position) (rotate (drop 3 position) %))
-        orient #(mirror [(if (= orientation :left) 1 0) 0 0] (translate [-5.5 0 -0.8] %))
-        oriented-diode-holder  (orient diode-holder)
-        support (translate [0 0 -1.0] (hull
-                                       (p (orient (cube 8 5.8 0.1)))
-                                       (translate (take 3 position) (translate [(if (= orientation :left) 3 -3) 0 -9] (orient (cube 0.1 0.1 0.1))))))
-        switch
-        (p (difference form oriented-diode-holder))
-        side
-        (p (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001))
-        shaft (difference (hull (translate [0 0 -2.5] side) (translate [0 0 -18] side)) support)]
-    (union switch shaft)))
-
-(defn get-switch-group-a [form orientation] (union (map #(get-switch-group-cutout form orientation %) switch-positions)))
-
-(defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
 (defn get-switch-hull [form [x y z a b c]]
   (hull
@@ -159,53 +107,16 @@
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
-(def switch-shells (render (get-switch-group switch-shell)))
 (def switch-hulls (render (get-switch-hull-group switch-shell)))
 
 (def connector-end
   (scale [1 1 0.9] (union (cylinder [1.5 0] 1.9) (translate [0 0 -1] (cylinder 1.5 1)))))
 
 (defn get-connector [start end]
-  (if (some nil? [start end]) nil
-      (hull
-       (translate start connector-end)
-       (translate end connector-end))))
-
-(def horizontal-matches [[2 7] [3 6]])
-
-(def vertical-connectors
-  (loop
-   [switches (sort #(compare (get-column %1) (get-column %2)) (range switch-count))
-    result []]
-    (if (> (count switches) 1)
-      (if (= (get-column (first switches)) (get-column (second switches)))
-        (recur (next switches) (conj result (vector [(first switches) 4] [(second switches) 1])))
-        (recur (next switches) result))
-      result)))
-
-(def horizontal-connectors
-  (filter #(not (some (fn [x] (= (first %) x)) []))
-          (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
-               (cart
-                (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
-                horizontal-matches))))
-
-(def connector-base-offset (+ (/ thickness -2) 2.2))
-
-(defn get-juncture [[index connector-id]]
-  (let [position (get-position index)]
-    (if (nil? position) nil
-        (let [[x y z rx ry rz] position
-              base (/ switch-min-width 2)
-              offsetsX [-6 0]
-              offsetsY [-6 6]
-              baseX (into [] (concat offsetsX (take 2 (repeat base)) (reverse offsetsX) (take 2 (repeat (* base -1)))))
-              baseY (into [] (concat (take 2 (repeat base)) (reverse offsetsY) (take 2 (repeat (* base -1))) offsetsY))
-              baseZ (+ z connector-base-offset)
-              [_ _ c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
-          [(+ (get baseX connector-id) x) (+ (get baseY connector-id) y) (- c 0.7)]))))
-
-(def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
+  (translate [0 0 -1.3]
+             (hull
+              (translate start connector-end)
+              (translate end connector-end))))
 
 (def controller-holder-cutout
   (translate
@@ -228,25 +139,13 @@
    [(- box-size 19.4) -11 (/ controller-height 2)]
    (round-cube 23 37 (+ thickness controller-height) 1.5)))
 
-(def controller-connector-z (- controller-height 4))
-
 (def mainboard-hull
   (union
    (hull
     switch-hulls
-    controller-holder)))
-
-(def switch-holder-cutout
-  (let [cap-height 15
-        cap-offset (+ (/ thickness 2) (/ cap-height 2) -1.01)]
-    (union
-     (difference
-      (union
-       (translate [0 0 cap-offset] (round-cube (+ box-size 0.6) (+ box-size 0.6) cap-height 1))
-       (cube switch-min-width switch-min-width thickness)
-       (hull
-        (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-        (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001))))))))
+    controller-holder)
+   ;(translate [75 -137 0] wrist-rest)
+   ))
 
 (def left [[1 1 1 1 1 1 1]
            [1.5 1 1 1 1 1]
@@ -257,7 +156,8 @@
 (def right [[1 1 1 1 1 1 1]
             [1.5 1 1 1 1 1]
             [1.75 1 1 1 1 1]
-            [2.25 1 1 1 1 1]])
+            [2.25 1 1 1 1 1]
+            [1 1 1 1 1.5 1.5]])
 
 (defn socket-cube [x y z radius]
   (let [corner (binding [*fn* (if dev 1 32)] (cylinder radius z))
@@ -274,7 +174,7 @@
          (map-indexed
           (fn [index row]
             (map
-             (fn [value] [index (second value)])
+             (fn [value] [(*  index switch-space) (* (second value) switch-space)])
              (reduce
               (fn [s v] (let [offset (+ (or (first (last s)) 0) v)] (conj s [offset (- offset (/ v 2))])))
               []
@@ -295,7 +195,7 @@
         (translate [0 0 (/ ty 2)] (socket-cube ew ew ty radius))
         (translate [0 0 (/ (- by 2) -2.4)] (cube switch-space switch-space by)))
        (translate [0 0 (/ ty 2)] (socket-cube iw iw (+ ty 0.01) radius))
-       (translate [(+ (/ iw -2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
+       (translate [(- (/ iw 2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
        (translate [0 0 0.25] (difference (cube 10 (+ iw 0.5) 0.8) (cube 10 (- iw 0.5) 0.8)))
        (difference
         (hull
@@ -303,20 +203,55 @@
          (translate [0 0 (+ (/ b -2)  0.1)] (socket-cube ww ww 0.01 radius)))
         (translate [-0.5 7.6 -1.65] (new-diode-holder 3.0))))))))
 
-(defn get-switch-positions [keys form] (map (fn [[y x]] (translate [(* y switch-space) (* x switch-space) 0] form)) (get-positions keys)))
+(defn get-switches [positions form] (map (fn [[y x]] (translate [y x 0] form)) positions))
+
+(defn get-horizontal-connectors [form] (let [offset 5.5] (union (translate [offset 0 0] form) (translate [(* offset -1) 0 0] form))))
 
 (defn get-keyboard [orientation]
   (let [keys (if (= orientation :left) left right)
         height (* switch-space (count keys))
         width (* switch-space (apply max (map #(reduce + %) keys)))
-        center (fn [forms] (translate [(/ (- height switch-space) -2) (/ width -2) 0] forms))
-        switches (center (get-switch-positions keys switch-socket))
-        spaces (center (get-switch-positions keys (cube switch-space switch-space 30)))]
-    (union
-     (difference
-      (cube height width 1)
-      spaces)
-     switches)))
+        controller-height 18
+        positions (map #(vector (+ (/ (- height switch-space) -2) (first %)) (+ (/ width -2) (second %))) (get-positions keys))
+        switches (get-switches positions switch-socket)
+        spaces (get-switches positions (cube switch-space switch-space 30))]
+    (difference
+     (union
+      (difference
+       (translate [(/ controller-height 2) 0 (/ (- thickness 2) -2.4) -1] (cube (+  height controller-height) width thickness))
+       spaces)
+      switches)
+     (get-horizontal-connectors (get-connector (nth positions 0) (nth positions 6)))
+     (get-horizontal-connectors (get-connector (nth positions 7) (nth positions 12)))
+     (get-horizontal-connectors (get-connector (nth positions 13) (nth positions 18)))
+     (get-horizontal-connectors (get-connector (nth positions 19) (nth positions 24)))
+     (get-horizontal-connectors (get-connector (nth positions 25) (nth positions 30)))
+     (get-connector (nth positions 0) (nth positions 7))
+     (get-connector (nth positions 7) (nth positions 13))
+     (get-connector (nth positions 13) (nth positions 19))
+     (get-connector (nth positions 19) (nth positions 25))
+     (get-connector (nth positions 19) (nth positions 26))
+     (get-connector (nth positions 2) (nth positions 8))
+     (get-connector (nth positions 8) (nth positions 14))
+     (get-connector (nth positions 14) (nth positions 20))
+     (get-connector (nth positions 20) (nth positions 27))
+     (get-connector (nth positions 3) (nth positions 9))
+     (get-connector (nth positions 9) (nth positions 15))
+     (get-connector (nth positions 15) (nth positions 21))
+     (get-connector (nth positions 21) (nth positions 28))
+     (get-connector (nth positions 4) (nth positions 10))
+     (get-connector (nth positions 10) (nth positions 16))
+     (get-connector (nth positions 16) (nth positions 22))
+     (get-connector (nth positions 22) (nth positions 29))
+     (get-connector (nth positions 5) (nth positions 11))
+     (get-connector (nth positions 11) (nth positions 17))
+     (get-connector (nth positions 17) (nth positions 23))
+     (get-connector (nth positions 23) (nth positions 30))
+     (get-connector (nth positions 6) (nth positions 12))
+     (get-connector (nth positions 12) (nth positions 18))
+     (get-connector (nth positions 18) (nth positions 24))
+     (get-connector (nth positions 24) (nth positions 30))
+     (translate [(+ (/ height 2) (/ controller-height 2) 0.4) -65.5  -2.8] (mirror [0 1 0] controller-holder-cutout)))))
 
 (def tool
   (let
