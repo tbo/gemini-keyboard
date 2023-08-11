@@ -1,8 +1,8 @@
 (ns gemini-keyboard.spec
   (:require [scad-clj.scad :refer [write-scad]]
             [scad-clj.model :refer
-             [fs! fn! fa! *fn* hull cube cylinder difference extrude-rotate translate minkowski
-              mirror rotate scale sphere union circle render extrude-linear polygon]]))
+             [fs! *fn* hull cube cylinder difference translate minkowski
+              mirror rotate scale sphere union render]]))
 
 (def dev false)
 (def switch-min-width 14.00)
@@ -48,14 +48,8 @@
   (union
    (difference
     (fuzzy-cube 6 8  z 0.5)
-    (translate [0 2 0.61] (cube 4.0 1.9 (- z 0.6)))
-    (translate [0 2 1.6] (cube 6.1 0.5 (- z 0.6))))))
-
-; (def latch ())
-; (def diode-holder ())
-; (fs! 1)
-; (fn! 1)
-; (fa! 1)
+    (translate [0 -2 0.61] (cube 4.0 1.9 (- z 0.6)))
+    (translate [0 -2 1.6] (cube 6.1 0.5 (- z 0.6))))))
 
 (def shell-corner-offset (+ switch-max-width 5.5))
 
@@ -237,7 +231,7 @@
          (map-indexed
           (fn [index row]
             (map
-             (fn [value] [index (second value)])
+             (fn [value] [(*  index switch-space) (* (second value) switch-space)])
              (reduce
               (fn [s v] (let [offset (+ (or (first (last s)) 0) v)] (conj s [offset (- offset (/ v 2))])))
               []
@@ -258,28 +252,31 @@
         (translate [0 0 (/ ty 2)] (socket-cube ew ew ty radius))
         (translate [0 0 (/ (- by 2) -2.4)] (cube switch-space switch-space by)))
        (translate [0 0 (/ ty 2)] (socket-cube iw iw (+ ty 0.01) radius))
-       (translate [(+ (/ iw -2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
+       (translate [(- (/ iw 2) 1.5) 0  (/ by -2)] (scale [1 1.8 1] (binding [*fn* (if dev 1 32)] (cylinder 2 by))))
        (translate [0 0 0.25] (difference (cube 10 (+ iw 0.5) 0.8) (cube 10 (- iw 0.5) 0.8)))
        (difference
         (hull
          (socket-cube (- iw 2) iw 0.01 radius)
          (translate [0 0 (+ (/ b -2)  0.1)] (socket-cube ww ww 0.01 radius)))
-        (translate [0.5 -7.6 -1.65] (new-diode-holder 3.0))))))))
+        (translate [-0.5 7.6 -1.65] (new-diode-holder 3.0))))))))
 
-(defn get-switch-positions [keys form] (map (fn [[y x]] (translate [(* y switch-space) (* x switch-space) 0] form)) (get-positions keys)))
+(defn get-switches [positions form] (map (fn [[y x]] (translate [y x 0] form)) positions))
 
 (defn get-keyboard [orientation]
   (let [keys (if (= orientation :left) left right)
         height (* switch-space (count keys))
         width (* switch-space (apply max (map #(reduce + %) keys)))
-        center (fn [forms] (translate [(/ (- height switch-space) -2) (/ width -2) 0] forms))
-        switches (center (get-switch-positions keys switch-socket))
-        spaces (center (get-switch-positions keys (cube switch-space switch-space 30)))]
-    (union
-     (difference
-      (cube height width 1)
-      spaces)
-     switches)))
+        positions (map #(vector (+ (/ (- height switch-space) -2) (first %)) (+ (/ width -2) (second %))) (get-positions keys))
+        switches (get-switches positions switch-socket)
+        spaces (get-switches positions (cube switch-space switch-space 30))]
+    (difference
+     (union
+      (difference
+       (cube height width 1)
+       spaces)
+
+      switches)
+     (get-connector (nth positions 0) (nth positions 7)))))
 
 (def tool
   (let

@@ -301,7 +301,7 @@
         (hull
          (socket-cube (- iw 2) iw 0.01 radius)
          (translate [0 0 (+ (/ b -2)  0.1)] (socket-cube ww ww 0.01 radius)))
-        (translate [0.5 -7.6 -1.65] (new-diode-holder 3.0))))))))
+        (translate [-0.5 7.6 -1.65] (new-diode-holder 3.0))))))))
 
 (defn get-switch-positions [keys form] (map (fn [[y x]] (translate [(* y switch-space) (* x switch-space) 0] form)) (get-positions keys)))
 
