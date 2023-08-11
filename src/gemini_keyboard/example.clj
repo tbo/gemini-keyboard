@@ -103,7 +103,6 @@
   (let [x-offset [0 0 0 0 0 0 0.7]
         y-offset [-4 -1 1 4.5 2.0 -4 -5.5]
         z-base-offset -1
-        z-offset [0 0 0 0 0 0 0]
         column (get-column index)
         row (get-row index)]
     (if (or (nil? row) (nil? column))
@@ -124,9 +123,7 @@
          (+ (* row (- box-size 0.5) -1)
             (get y-offset column 0))
          z-base-offset
-         ; (get-vertival-inclination row)
          0
-         ; (get-horizontal-inclination column)
          0
          0]))))
 
@@ -148,8 +145,6 @@
         shaft (difference (hull (translate [0 0 -2.5] side) (translate [0 0 -18] side)) support)]
     (union switch shaft)))
 
-(defn get-switch-group-a [form orientation] (union (map #(get-switch-group-cutout form orientation %) switch-positions)))
-
 (defn get-switch-group [form] (union (map #(translate (take 3 %) (rotate (drop 3 %) form)) switch-positions)))
 
 (defn get-switch-hull [form [x y z a b c]]
@@ -159,7 +154,6 @@
 
 (defn get-switch-hull-group [form] (union (map (partial get-switch-hull form) switch-positions)))
 
-(def switch-shells (render (get-switch-group switch-shell)))
 (def switch-hulls (render (get-switch-hull-group switch-shell)))
 
 (def connector-end
@@ -172,23 +166,6 @@
        (translate end connector-end))))
 
 (def horizontal-matches [[2 7] [3 6]])
-
-(def vertical-connectors
-  (loop
-   [switches (sort #(compare (get-column %1) (get-column %2)) (range switch-count))
-    result []]
-    (if (> (count switches) 1)
-      (if (= (get-column (first switches)) (get-column (second switches)))
-        (recur (next switches) (conj result (vector [(first switches) 4] [(second switches) 1])))
-        (recur (next switches) result))
-      result)))
-
-(def horizontal-connectors
-  (filter #(not (some (fn [x] (= (first %) x)) []))
-          (map (fn [[index [from to]]] (vector [index from] [(inc index) to]))
-               (cart
-                (filter #(= (get-row %) (get-row (+ % 1))) (range (- switch-count 1)))
-                horizontal-matches))))
 
 (def connector-base-offset (+ (/ thickness -2) 2.2))
 
@@ -204,8 +181,6 @@
               baseZ (+ z connector-base-offset)
               [_ _ c] (rotate-point (get baseX connector-id) (get baseY connector-id) baseZ rx ry rz)]
           [(+ (get baseX connector-id) x) (+ (get baseY connector-id) y) (- c 0.7)]))))
-
-(def get-connectors #(map (fn [[from to]] (get-connector (get-juncture from) (get-juncture to))) %))
 
 (def controller-holder-cutout
   (translate
@@ -228,25 +203,13 @@
    [(- box-size 19.4) -11 (/ controller-height 2)]
    (round-cube 23 37 (+ thickness controller-height) 1.5)))
 
-(def controller-connector-z (- controller-height 4))
-
 (def mainboard-hull
   (union
    (hull
     switch-hulls
-    controller-holder)))
-
-(def switch-holder-cutout
-  (let [cap-height 15
-        cap-offset (+ (/ thickness 2) (/ cap-height 2) -1.01)]
-    (union
-     (difference
-      (union
-       (translate [0 0 cap-offset] (round-cube (+ box-size 0.6) (+ box-size 0.6) cap-height 1))
-       (cube switch-min-width switch-min-width thickness)
-       (hull
-        (translate [0 0 0.3] (cube switch-min-width switch-min-width 0.001))
-        (translate [0 0 -2.5] (cube (+ switch-min-width 2) (+ switch-min-width 1.5) 0.001))))))))
+    controller-holder)
+   ;(translate [75 -137 0] wrist-rest)
+   ))
 
 (def left [[1 1 1 1 1 1 1]
            [1.5 1 1 1 1 1]
